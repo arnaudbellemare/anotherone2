@@ -2826,13 +2826,22 @@ def process_single_ticker(ticker_symbol, etf_histories, sector_etf_map):
         returns_perf = calculate_returns_cached(ticker_symbol, tuple([5, 10, 21, 63, 126, 252]))
         data.update({f"Return_{p}d": returns_perf.get(f"Return_{p}d") for p in [5, 10, 21, 63, 126, 252]})
         
-        # FIXED INDENTATION: Properly handle log returns calculation
         log_returns = pd.Series(dtype=float)
-        if not history.empty and 'Close' in history.columns and (history['Close'] > 0).all():
-            # Calculate log returns properly
-            price_series = history['Close']
-            log_returns = np.log(price_series / price_series.shift(1)).dropna()
-            
+
+# Check if history is usable
+        if not history.empty and 'Close' in history.columns:
+    
+    # 1. THE FIX: Filter out any non-positive prices instead of rejecting the whole series.
+    #    This prevents log(0) errors and is much more robust than the `.all()` check.
+            price_series = history['Close'][history['Close'] > 0]
+
+    # 2. Proceed only if there are valid prices left after filtering.
+            if not price_series.empty:
+                log_returns = np.log(price_series / price_series.shift(1)).dropna()
+
+    # 3. All subsequent calculations are now inside a check for valid log_returns.
+    #    This ensures they only run if the return series was successfully created.
+ 
             if not log_returns.empty:
                 data.update({
                     'GARCH_Vol': calculate_garch_volatility(log_returns),
