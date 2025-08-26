@@ -45,73 +45,6 @@ sector_etf_map = {
 }
 factor_etfs = ['QQQ', 'IWM', 'DIA', 'EEM', 'EFA', 'IVE', 'IVW', 'MDY', 'MTUM', 'RSP', 'SPY', 'QUAL', 'SIZE', 'USMV']
 etf_list = list(set(sector_etf_map.values()) | set(factor_etfs))
-# --- Data Structures and Mappings ---
-
-INSTITUTIONAL_FACTORS = [
-    'LogMktCap', 'LogMktCapCubed', 'IndRel_TobinQ', 'ROEStddev20Q', 'ROAStddev20Q', 'ShareChg',
-    'EQ-style', 'AccrualRatioBS', 'SusGrwRate', 'AstGrwth', 'HG-style', 'IndRel_SusGrwRate',
-    '3YAvgAnnSalesGrw', 'Sz-style', 'AdjAccruals', 'Chg1YCACL', '6MAvgChg1MRecC', 'CashCycle',
-    'ChgDeprCapex', 'DA', 'IndRel_AccrualRatioCF', 'UnexpectedRecChg', 'AE-style',
-    'IndRel_CashCycle', 'IndRel_DA', 'WCAccruals', 'IndRel_WCAccruals', 'TotalAccruals',
-    'IndRel_AdjAccruals', '5YRel_QuickRatio', 'IndRel_ShareChg', 'AdjIntCov', 'IntCovRatio',
-    '5YRel_CACL', 'IndRel_ChgSalesMargin', 'ROA60MSlope', 'ChgSalesMargin', 'LTDE',
-    'IndRel_LTDA', '5YRel_ChgSalesMargin', 'InvTurn', '5YRel_LTDA', 'WCapToSales',
-    'IndRel_IntCovRatio', '5YRel_AdjAccruals', 'Chg3YEPS', 'SGPToSales', 'UnexpectedInvChg',
-    'IndRel_LTDE', 'SalesToEPSChg', '3YAvgAnnEPSGrw', 'DIVIDENDGROWTH', 'InvToAsset',
-    'EPSEstDispFY2C', 'IndRel_QuickRatio', 'RONA', 'DivperShareGrowth', 'AstAdjChg3YEPS',
-    'NetProfitMargin', 'Chg3YCF', 'IndRel_InvToAsset', 'IndRel_InvTurn', 'IndRel_EPSEstDispFY1C',
-    '5YRel_WCA', 'GPMargin', 'IndRel_PAdjChg3YSales', 'IndRel_SGPToSales', 'QuickRatio',
-    'IndRel_SGPToSalesChg1Y', 'Chg3YOPM', 'AstAdjChg3YCF', 'WCapToAst', '5YRel_ROA', '5YRel_OEA',
-    'IndRel_CACL', 'WCA', 'WCA_2', '5YRel_GPMargin', '5YRel_WCTurn', 'FinLev', 'LogAssets',
-    '5YRel_PTMargin', '5YRel_FCFP', '5YRel_OPM', 'Chg1YLTDA', 'IndRel_TotalAccruals', 'CACL',
-    'CFIC', 'EstDiffC', 'EBITMargin', 'IndRel_DepToCapex', '5YRel_EBITMargin', 'IndRel_WCTurn',
-    'IndRel_WCA', 'CashAst', 'AstAdjChg3YFCF', 'EPSEstDispFY1C', 'DepToCapex',
-    'IndRel_ROE', 'IndRel_DebtChg1Y', 'Chg3YFCF', '5YRel_ROE', '5YRel_ROIC', '5YRel_CashAst',
-    'CFAst', 'PAdjChg3YFCF', 'AdjEPSNumRevFY1C', 'IndRel_InvToAst', 'IndRel_CashAst',
-    'IndRel_ROA', 'IndRel_OEA', 'CashRatio', 'IndRel_NetProfitMargin', 'AstAdjChg3YOCF',
-    'AstAdjChg1YFCF', 'IndRel_ROIC', 'IndRel_ChgDeprCapex', 'IndRel_CapAcqRatio',
-    'IndRel_FCFEV', 'IndRel_FCFP', 'IndRel_GPMargin', 'OEA', 'AdjEPSNumRevFY2C',
-    'PAdjChg3YEPS', 'MVEToTL', 'IndRel_WCapToSales', 'SolvencyRatio', 'ROA_2', 'AstAdjChg1YOCF',
-    'IndRel_CapExToAst', 'IndRel_PAdjChg1YFCF', 'CFEqt', 'Chg3YAstTo', 'IndRel_PTMargin',
-    'IndRel_Chg1YOPM', 'IndRel_RecTurn', 'AstAdjChg1YCF', '5YRel_Chg1YEPS', 'EbitToAst_2',
-    'IndRel_EBITMargin', 'IndRel_OPM', 'Chg1YFCF', 'IndRel_Chg1YOCF', 'IndRel_PAdjChg1YSales',
-    'EPSNumRevFY1C', 'AstAdjChg1YEPS', 'SalesToInvCap', 'IndRel_PAdjChg1YEPS', 'PAdjChg3YOCF',
-    'FCFEV', 'NIStab', 'Chg3YOCF', '5YRel_RecTurn', 'IndRel_AssetTurn', 'LogTTMSales',
-    'IndRel_EPSToSalesChg1Y', 'FCFP', 'Altman_ZScore', 'Chg1YGPMargin', 'Chg1YOPM',
-    'IndRel_Chg1YFCF', '6MChgTgtPrc', 'IndRel_PAdjChg1YCF', 'IndRel_FCFEqt', 'IndRel_CFROIC',
-    'Chg1YEPS', 'PAdjChg3YCF', 'CapAcqRatio', 'IndRel_Chg1YEPS', 'FCFEqt', 'AssetTurn',
-    'AssetTurn_2', 'Rev3MFY1C', 'PAdjChg1YEPS', 'CashBurn', 'PAdjChg3YSales',
-    'IndRel_FwdFCFPC', 'Chg1YROA', '6MTTMSalesMom', 'Chg1YCF', 'Piotroski_FScore',
-    'Rev3MFY2C', 'IndRel_NCAP', 'RecTurn', 'BuyToSellRecLess3MSMA', 'CFROIC', '3MSalesMom',
-    'OCFEqt', 'IndRel_SEV', 'AdjRevMagC', 'BuyToSellRecLess3MEMA', 'IndRel_CashEV',
-    'ChgATO_2', 'IndRel_OCFP', 'Chg1YAstTo', 'OCFRatio', 'IndRel_OCFEV', 'OCFAst_2',
-    'RevMagFY1C', 'IndRel_SP', 'FwdFCFPC', '6MChgTgtPrcGap', 'PAdjChg1YSales', 'IndRel_CFP',
-    'IndRel_EP', 'IndRel_AstP', 'IndRel_OEP', 'IndRel_CFEV', 'IndRel_EBITDAP', 'REToAst',
-    'IndRel_GFP', 'IndRel_PTIP', 'REToAst_2', '5YRel_OCFP', 'IndRel_EBITDAEV', '4WChgFwd12MEPS',
-    'CurLiaP', 'NCAP', 'IndRel_BP', 'IndRel_CashP', 'IndRel_DivP', '8WChgFwd12MEPS', 'OCFP',
-    '5YRel_CFEV', 'AdjEBITP', 'OCFEV', 'OEP', '5YRel_CFP', '5YRel_EBITDAP', 'CashEV', 'CashP',
-    'AstP', 'GFP', 'SP', 'EBITDAEV', 'SEV', 'BP', '5YRel_AstP', '5YRel_BP', 'STO', 'AnnVol1M',
-    '5DVolSig', 'PM1M', 'PrcTo260DL', 'IndRel_PM1M', 'Chg1YTurnover', '14DayRSI', '10DMACD',
-    'IndRel_PM5D', 'MaxRetPayoff', 'PM5D', 'IndRel_50DVolSig', 'PM6M', '50DVolSig', 'AnnVol12M',
-    'IndRel_PM6M', 'AdjSTO_6M', 'RSI26W', 'IndRel_MaxRetPayoff', 'PM9M', 'IndRel_PM9M',
-    '24MResRtnVar', '90DCV', 'PM-style', 'Alpha60M', '20DStochastic', 'PA52WL20DLag',
-    '5DMoneyFlowVol', 'SharpeRatio', 'PSlopeSERR_26W', 'LogUnadjPrice', '50To200PrcRatio',
-    'StdErr180D', 'PrcTo52WH', 'PRatio15To36W', '39WRtnLag4W', 'IndRel_PM12M1M', 'PM12M1M',
-    '52WSlope', 'BookLev', 'Alpha18M6MPChg', 'YoYChgDA', 'Alpha12M6MPChg', 'Beta60M',
-    'VolAdjRtn12M', 'RelPrStr_12M', 'Alpha36M6MPChg', 'CVVolPrc60D', 'CVVolPrc30D',
-    'CVVolPrc20D', 'STO_6M', 'RskAdjRS', '130DMinRtn', 'HL1M', 'Chg1YAmihud', '4To52WPrcOsc',
-    'HL52W', 'Amihud', 'Vol-style'
-]
-
-sector_etf_map = {
-    'Technology': 'XLK', 'Consumer Cyclical': 'XLY', 'Communication Services': 'XLC',
-    'Financial Services': 'XLF', 'Industrials': 'XLI', 'Basic Materials': 'XLB',
-    'Energy': 'XLE', 'Real Estate': 'XLRE', 'Healthcare': 'XLV',
-    'Consumer Defensive': 'XLP', 'Utilities': 'XLU'
-}
-factor_etfs = ['QQQ', 'IWM', 'DIA', 'EEM', 'EFA', 'IVE', 'IVW', 'MDY', 'MTUM', 'RSP', 'SPY', 'QUAL', 'SIZE', 'USMV']
-etf_list = list(set(sector_etf_map.values()) | set(factor_etfs))
-
 default_weights = {
     "(Dividends + Share Buyback) / FCF": 5.0, "CapEx / (Depr + Amor)": 4.5, "Debt Ratio": 6.0,
     "Gross Profit Margin": 7.5, "Inventory Turnover": 4.5, "Net Profit Margin": 6.5,
@@ -140,6 +73,8 @@ default_weights = {
     "10-Day Return": 3.5
 }
 # --- FULLY CORRECTED 'columns' LIST ---
+# --- FULLY CORRECTED 'columns' LIST ---
+# (Existing columns are preserved, and new ones are added)
 columns = [
     "Ticker", "Name","Market_Cap", "Dividend_Yield", "PE_Ratio", "EPS_Diluted",
     "Sales_Per_Share", "FCF_Per_Share", "Asset_Turnover", "CapEx_to_DepAmor",
@@ -162,327 +97,268 @@ columns = [
     "Revenue_Growth_Rate_5y", "Meets_Triple_Rule", "Return_21d", "Return_63d", "Return_126d", "Return_252d",
     "Audit_Risk", "Board_Risk", "Compensation_Risk", "Shareholder_Rights_Risk",
     "Overall_Risk", "Institutional_Ownership_Ratio", "Hurst_Exponent",
-    "Momentum", "Growth",
-    "Earnings_Price_Ratio","Book_to_Market_Ratio",
-    "Beta_Down_Market", "Beta_Up_Market",
-    "Carry", "Relative_Carry", "CS_Mean_Reversion","Return_5d", "Return_10d",
+    "Momentum", "Growth", "Earnings_Price_Ratio","Book_to_Market_Ratio",
+    "Beta_Down_Market", "Beta_Up_Market", "Carry", "Relative_Carry", "CS_Mean_Reversion",
+    "Return_5d", "Return_10d",
+    # --- START: NEWLY ADDED FACTORS ---
+    'LogMktCap', 'LogMktCapCubed', 'IndRel_TobinQ', 'ROEStddev20Q', 'ROAStddev20Q', 'ShareChg',
+    'EQ-style', 'AccrualRatioBS', 'SusGrwRate', 'AstGrwth', 'HG-style', 'IndRel_SusGrwRate',
+    '3YAvgAnnSalesGrw', 'Sz-style', 'AdjAccruals', 'Chg1YCACL', '6MAvgChg1MRecC', 'CashCycle',
+    'ChgDeprCapex', 'DA', 'IndRel_AccrualRatioCF', 'UnexpectedRecChg', 'AE-style',
+    'IndRel_CashCycle', 'IndRel_DA', 'WCAccruals', 'IndRel_WCAccruals', 'TotalAccruals',
+    'IndRel_AdjAccruals', '5YRel_QuickRatio', 'IndRel_ShareChg', 'AdjIntCov', 'IntCovRatio',
+    '5YRel_CACL', 'IndRel_ChgSalesMargin', 'ROA60MSlope', 'ChgSalesMargin', 'LTDE',
+    'IndRel_LTDA', '5YRel_ChgSalesMargin', 'InvTurn', '5YRel_LTDA', 'WCapToSales',
+    'IndRel_IntCovRatio', '5YRel_AdjAccruals', 'Chg3YEPS', 'SGPToSales', 'UnexpectedInvChg',
+    'IndRel_LTDE', 'SalesToEPSChg', '3YAvgAnnEPSGrw', 'DIVIDENDGROWTH', 'InvToAsset',
+    'EPSEstDispFY2C', 'IndRel_QuickRatio', 'RONA', 'DivperShareGrowth', 'AstAdjChg3YEPS',
+    'Chg3YCF', 'IndRel_InvToAsset', 'IndRel_InvTurn', 'IndRel_EPSEstDispFY1C',
+    '5YRel_WCA', 'GPMargin', 'IndRel_PAdjChg3YSales', 'IndRel_SGPToSales',
+    'IndRel_SGPToSalesChg1Y', 'Chg3YOPM', 'AstAdjChg3YCF', 'WCapToAst', '5YRel_ROA', '5YRel_OEA',
+    'IndRel_CACL', 'WCA', 'WCA_2', '5YRel_GPMargin', '5YRel_WCTurn', 'FinLev', 'LogAssets',
+    '5YRel_PTMargin', '5YRel_FCFP', '5YRel_OPM', 'Chg1YLTDA', 'IndRel_TotalAccruals', 'CACL',
+    'CFIC', 'EstDiffC', 'EBITMargin', 'IndRel_DepToCapex', '5YRel_EBITMargin', 'IndRel_WCTurn',
+    'IndRel_WCA', 'CashAst', 'AstAdjChg3YFCF', 'EPSEstDispFY1C', 'DepToCapex',
+    'IndRel_ROE', 'IndRel_DebtChg1Y', 'Chg3YFCF', '5YRel_ROE', '5YRel_ROIC', '5YRel_CashAst',
+    'CFAst', 'PAdjChg3YFCF', 'AdjEPSNumRevFY1C', 'IndRel_InvToAst', 'IndRel_CashAst',
+    'IndRel_ROA', 'IndRel_OEA', 'CashRatio', 'IndRel_NetProfitMargin', 'AstAdjChg3YOCF',
+    'AstAdjChg1YFCF', 'IndRel_ROIC', 'IndRel_ChgDeprCapex', 'IndRel_CapAcqRatio',
+    'IndRel_FCFEV', 'IndRel_FCFP', 'IndRel_GPMargin', 'OEA', 'AdjEPSNumRevFY2C',
+    'PAdjChg3YEPS', 'MVEToTL', 'IndRel_WCapToSales', 'SolvencyRatio', 'ROA_2', 'AstAdjChg1YOCF',
+    'IndRel_CapExToAst', 'IndRel_PAdjChg1YFCF', 'CFEqt', 'Chg3YAstTo', 'IndRel_PTMargin',
+    'IndRel_Chg1YOPM', 'IndRel_RecTurn', 'AstAdjChg1YCF', '5YRel_Chg1YEPS', 'EbitToAst_2',
+    'IndRel_EBITMargin', 'IndRel_OPM', 'Chg1YFCF', 'IndRel_Chg1YOCF', 'IndRel_PAdjChg1YSales',
+    'EPSNumRevFY1C', 'AstAdjChg1YEPS', 'SalesToInvCap', 'IndRel_PAdjChg1YEPS', 'PAdjChg3YOCF',
+    'FCFEV', 'NIStab', 'Chg3YOCF', '5YRel_RecTurn', 'IndRel_AssetTurn', 'LogTTMSales',
+    'IndRel_EPSToSalesChg1Y', 'FCFP', 'Altman_ZScore', 'Chg1YGPMargin', 'Chg1YOPM',
+    'IndRel_Chg1YFCF', '6MChgTgtPrc', 'IndRel_PAdjChg1YCF', 'IndRel_FCFEqt', 'IndRel_CFROIC',
+    'Chg1YEPS', 'PAdjChg3YCF', 'CapAcqRatio', 'IndRel_Chg1YEPS', 'FCFEqt',
+    'Rev3MFY1C', 'PAdjChg1YEPS', 'CashBurn', 'PAdjChg3YSales',
+    'IndRel_FwdFCFPC', 'Chg1YROA', '6MTTMSalesMom', 'Chg1YCF',
+    'Rev3MFY2C', 'IndRel_NCAP', 'RecTurn', 'BuyToSellRecLess3MSMA', 'CFROIC', '3MSalesMom',
+    'OCFEqt', 'IndRel_SEV', 'AdjRevMagC', 'BuyToSellRecLess3MEMA', 'IndRel_CashEV',
+    'ChgATO_2', 'IndRel_OCFP', 'Chg1YAstTo', 'OCFRatio', 'IndRel_OCFEV', 'OCFAst_2',
+    'RevMagFY1C', 'IndRel_SP', 'FwdFCFPC', '6MChgTgtPrcGap', 'PAdjChg1YSales', 'IndRel_CFP',
+    'IndRel_EP', 'IndRel_AstP', 'IndRel_OEP', 'IndRel_CFEV', 'IndRel_EBITDAP', 'REToAst',
+    'IndRel_GFP', 'IndRel_PTIP', 'REToAst_2', '5YRel_OCFP', 'IndRel_EBITDAEV', '4WChgFwd12MEPS',
+    'CurLiaP', 'NCAP', 'IndRel_BP', 'IndRel_CashP', 'IndRel_DivP', '8WChgFwd12MEPS', 'OCFP',
+    '5YRel_CFEV', 'AdjEBITP', 'OCFEV', 'OEP', '5YRel_CFP', '5YRel_EBITDAP', 'CashEV', 'CashP',
+    'AstP', 'GFP', 'SP', 'EBITDAEV', 'SEV', 'BP', '5YRel_AstP', '5YRel_BP', 'STO', 'AnnVol1M',
+    '5DVolSig', 'PM1M', 'PrcTo260DL', 'IndRel_PM1M', 'Chg1YTurnover', '14DayRSI', '10DMACD',
+    'IndRel_PM5D', 'MaxRetPayoff', 'PM5D', 'IndRel_50DVolSig', 'PM6M', '50DVolSig', 'AnnVol12M',
+    'IndRel_PM6M', 'AdjSTO_6M', 'RSI26W', 'IndRel_MaxRetPayoff', 'PM9M', 'IndRel_PM9M',
+    '24MResRtnVar', '90DCV', 'PM-style', 'Alpha60M', '20DStochastic', 'PA52WL20DLag',
+    '5DMoneyFlowVol', 'SharpeRatio', 'PSlopeSERR_26W', 'LogUnadjPrice', '50To200PrcRatio',
+    'StdErr180D', 'PrcTo52WH', 'PRatio15To36W', '39WRtnLag4W', 'IndRel_PM12M1M', 'PM12M1M',
+    '52WSlope', 'BookLev', 'Alpha18M6MPChg', 'YoYChgDA', 'Alpha12M6MPChg', 'Beta60M',
+    'VolAdjRtn12M', 'RelPrStr_12M', 'Alpha36M6MPChg', 'CVVolPrc60D', 'CVVolPrc30D',
+    'CVVolPrc20D', 'STO_6M', 'RskAdjRS', '130DMinRtn', 'HL1M', 'Chg1YAmihud', '4To52WPrcOsc',
+    'HL52W', 'Amihud', 'Vol-style'
+    # --- END: NEWLY ADDED FACTORS ---
 ]
-#tickers = ["KLAC", "NVDA", "NEU", "APH", "MSFT", "UI", "CME", "HLI", "EXEL", "HWM", "LRCX", "APP", "SCCO", "NFLX", "LLY", "EHC", "VRSK", "MCO", "RMD", "ALLE", "CTAS", "META", "CRS", "AGX", "INTU", "HALO", "RCL", "HEI", "CF", "GOOG", "EME", "DRI", "WWD", "TT", "TMUS", "BR", "BAH", "FTDR", "TDG", "FCFS", "CBOE", "VST", "JNJ", "AVGO", "BLK", "EAT", "NTAP", "IESC", "COP", "MTDR", "AIT", "AMAT", "SFM", "CW", "TPR", "STX", "RL", "HIMS", "WTS", "HCA", "NDAQ", "VRT", "AMGN", "COST", "ESE", "ROL", "MPLX", "FAST", "NVT", "CTRA", "BMI", "COR", "MELI", "WING", "NEM", "NSC", "FIX", "LRN", "BWXT", "EXPE", "POWL", "WELL", "SXT", "MA", "UTHR", "GD", "USFD", "PM", "ETN", "QDEL", "EVR", "MDT", "VEEV", "BKNG", "WINA", "FICO", "FSS", "FTNT", "PATK", "LECO", "GILD", "RSG", "MCK", "ICE", "CAKE", "PWR", "PLTR", "ALSN", "IPAR", "HESM", "GWW", "SYY", "ITW", "AWI", "PKG", "IBM", "QCOM", "CSCO", "CAH", "ITT", "LII", "DPZ", "URI", "TXRH", "TXN", "MO", "GSHD", "EBAY", "AJG", "FTI", "MSI", "ZTS", "CTRE", "IMO", "IDXX", "ORCL", "ITRI", "DY", "V", "GRMN", "PPC", "SPGI", "LEU", "UBER", "ALV", "LNG", "ADP", "SNPS", "TGLS", "GE", "PRIM", "UNP", "BSY", "MWA", "AXON", "TRGP", "EA", "ABT", "PH", "WAB", "FFIV", "JCI", "LIN", "VRSN", "MPWR", "TEL", "HD", "MAR", "MORN", "CACC", "NYT", "UHS", "QLYS", "SSNC", "CPRX", "LCII", "CL", "JBL", "OVV", "BX", "PJT", "YUM", "CVNA", "NXST", "FOX", "RRR", "DTE", "NTES", "WM", "LMT", "ACN", "DGX", "ROP", "MRK", "UGI", "BYD", "CR", "XOM", "DUOL", "MCD", "NDSN", "KTB", "LAD", "WMB", "APO", "MGY", "REVG", "ADI", "FN", "DE", "DLB", "GEN", "MNST", "HLT", "SBAC", "ENB", "ADT", "SYK", "CTSH", "EW", "BRO", "FLR", "CHTR", "VZ", "ARMK", "PLNT", "EXPD", "PNR", "PAYX", "MSA", "CHE", "GGG", "CDNS", "T", "AON", "CDW", "NRG", "IDCC", "CAT", "PTC", "TNL", "DIS", "UNH", "BRBR", "ATI", "DOCS", "LPLA", "JHG", "BJ", "SANM", "CCK", "ANSS", "PAG", "PR", "AMD", "XEL", "TW", "PIPR", "ATMU", "VMI", "WEC", "KMI", "RTX", "LULU", "HUBB","CORZ", "SHW", "OSK","RDDT", "PCAR", "CPA", "RS", "CACI", "AZO", "AROC", "PINS", "SNEX", "DORM", "PTCT", "MSCI", "PODD", "ECL", "ROK", "WDFC", "JKHY", "MTN", "HAL", "NOW", "TROW", "IRDM", "STE", "FDS", "MLI", "SBRA", "EXE", "PAYC", "HURN", "SCI", "GDDY", "BABA", "TSCO", "EMR", "ESAB", "CSL", "VICI", "DG", "SNA", "TDY", "GVA", "ORLY", "CHEF", "BMRN", "CIVI", "CHDN", "DK", "FHI", "EXR", "SU", "ENS", "MC", "HOOD", "DELL", "NXPI", "VRTX", "HON", "HAS", "UFPT", "KRYS", "CMCSA", "BDC", "ENSG", "LVS", "ULTA", "PG", "HRB", "ISRG", "SPXC", "GLPI", "ABBV", "EOG", "TER", "KR", "VMC", "PEGA", "HES", "GFF", "HSY", "SSD", "CPRT", "CEG", "UPWK", "CROX", "ATR", "EPD", "DCI", "HQY", "LOPE", "CORT", "TJX", "BSX", "BCPC", "ELS", "FLO", "H", "G", "DKS", "AEIS", "COKE", "EQT", "ROAD", "AMP", "VC", "HAE", "CVX", "WSM", "AAPL", "DDS", "REGN", "INGR", "WH", "MEDP", "CMG", "JAZZ", "AMT", "AEE", "PEP", "ET", "NFG", "LAZ", "KFY", "OSIS", "PCTY", "DOV", "WDC", "LAMR", "MMSI", "NTNX", "ZBH", "IT", "GHC", "WMT", "PHM", "ATO", "ACMR", "MATX", "TKR", "MAIN", "OXY", "WCC", "NEE", "TTC", "OKE", "QSR", "HLNE", "TRU", "CRM", "BKR", "IBP", "AYI", "CNM", "EXP", "URBN", "SKYW", "SWKS", "DT", "AME", "WMG", "BOOT", "FLEX", "WES", "ELF", "F", "PBH", "MANH", "AOS", "OTIS", "APPF", "CPNG", "MKSI", "OLED", "XYL", "GPOR", "SLB", "TMO", "TTMI", "ADM", "TYL", "AMZN", "PEG", "EPR", "STAG", "FANG", "PAGP", "SMLR", "NOC", "CWH", "ADBE", "DECK", "TXT", "LOW", "NBIX", "AMCR", "MSM", "CVLT", "K", "CNP", "YUMC", "SPSC", "CRH", "A", "BRK-A", "LNTH", "MKTX", "RPRX", "CSX", "PII", "SAIC", "NET", "ADSK", "GMS", "CARR", "RMBS", "THC", "IVZ", "CTVA", "CRUS", "PAA", "NNN", "CBT", "AR", "WMS", "CHH", "WPC", "MMS", "ES", "TDW", "FDX", "OHI", "KMB", "WCN", "NKE", "POWI", "WAT", "CMI", "CLX", "LOGI", "OTEX", "BMY", "FIVE", "UPS", "YOU", "BBWI", "EXC", "PPL", "NUE", "EFX", "STRL", "AMG", "MPC", "WSO", "DXCM", "CVS", "IEX", "WHD", "DVN", "TRMB", "KAI", "AVY", "WST", "TMDX", "GM", "CIEN", "UAL", "NSP", "HXL", "ZM", "YELP", "KVUE", "TTD", "LNT", "FOUR", "MAT", "FLS", "ROST", "PSX", "RPM", "KEX", "LKQ", "CP", "LTH", "CARG", "DDOG", "CGNX", "BROS", "ANF", "LHX", "PFE", "NVR", "OC", "TMHC", "MARA", "PANW", "AL", "GTLS", "GNTX", "MIDD", "GPN", "EMN", "GLW", "AVT", "PEN", "INFA", "BCO", "STZ", "HST", "CBRE", "FTAI", "ASO", "THO", "D", "TRNO", "OWL", "ZBRA", "RRC", "NI", "CWEN", "BLD", "ABNB", "CHD", "ACIW", "SKX", "POOL", "SKY", "KO", "VAC", "ED", "DVA", "SLGN", "GPC", "RKLB", "AMED", "PSN", "IQV", "FUL", "WFRD", "LH", "CLH", "LPX", "MUSA", "FE", "SMCI", "VIRT", "GEHC", "MMM", "GTES", "LEA", "TDC", "MAS", "ACM", "GNRC", "CVCO", "DOCU", "DBX", "ESS", "COHR", "KDP", "PPG", "DOX", "GPI", "BDX", "VNT", "GIS", "FNF", "PGNY", "OPCH", "BOX", "UDR", "MOH", "RBA", "JLL", "SHOO", "SBUX", "EGP", "BXP", "MLM", "CRC", "TGTX", "MTD", "ODFL", "UFPI", "APA", "MYRG", "CELH", "FI", "VNOM", "GPK", "PARA", "TEX", "RVLV", "BRKR", "KEYS", "OMC", "CDE", "JBHT", "BIIB", "FCX", "SRE", "ACAD", "MDLZ", "CMS", "INCY", "MTZ", "OGN", "ST", "SPG", "BALL", "EPRT", "LFUS", "ATGE", "CUBE", "INSM", "HTHT", "GATX", "IP", "J", "EXLS", "VLO", "HOLX", "XPO", "MTCH", "DAL", "ALKS", "LYB", "ENTG", "SLM", "BL", "ARRY", "CNC", "LW", "FMC", "ELAN", "ARW", "KNF", "YETI", "CAVA", "ESI", "SITE", "TREX", "WEN", "ABG", "VNO", "TGT", "MKC", "HP", "RRX", "BFAM", "DHR", "AVB", "MHO", "R", "TTEK", "SEE", "CNXC", "CRI", "NOVT", "MGM", "AA", "TOST", "BG", "KIM", "MSTR", "SMPL", "LEVI", "REG", "VVV", "PINC", "WSC", "MSGS", "ROIV", "NVS", "ETR", "SMG", "TGNA", "HRI", "ZS", "VRNA", "CCJ", "ALGN", "AMH", "BLDR", "DX", "STLD", "SWX", "LYV", "PSTG", "INOD", "TGI", "PK", "HPE", "BEN", "LYFT", "BZ", "SON", "CHWY", "SHAK", "WDAY", "SO", "CBZ", "EVRG", "ROOT", "FRT", "AN", "GXO", "CHRW", "PYPL", "HR", "KHC", "CCL", "HL", "TCOM", "GDS", "MTSI", "LBRT", "VSEC", "COO", "WYNN", "HOG", "AXTA", "HRL", "INVH", "SR", "GWRE", "HSIC", "FTV", "BCC", "MGNI", "ACLS", "ZTO", "CCCS", "IDA", "BBY", "APTV", "MOG-A", "PZZA", "EQR", "MAA", "FND", "RBLX", "SKT", "LIVN", "DRS", "SWK", "BURL", "ARCC", "KBR", "SNX", "ON", "FIS", "VSCO", "WU", "CSGP", "AAOI", "EPAM", "TFX", "TAP", "BKH", "MOS", "SYNA", "JEF", "SM", "AKAM", "TSLA", "POST", "NSIT", "GOLF", "WHR", "TEAM", "ITGR", "RGC", "VOD", "AAON", "COIN", "FSLR", "DV", "ALNY", "SIG", "BC", "TECH", "BWA", "SAND", "DUK", "TNET", "M", "TRP", "TPH", "PLAY", "IRM", "MOD", "MAC", "TSSI", "NCLH", "NFE", "HGV", "QRVO", "BILL", "QTWO", "IPG", "REXR", "ETSY", "NE", "DASH", "CRGY", "INSP", "BE", "COTY", "PLD", "TMC", "AFRM", "DEI", "CBRL", "SMR", "EG", "DXC", "LSTR", "TIGR", "NJR", "CAG", "DAN", "AEO", "TSN", "HII", "COLM", "WY", "FCN", "KNX", "KRG", "HPQ", "ORA", "CRWD", "FR", "SOFI", "WRBY", "CLSK", "EIX", "OLN", "RYTM", "IONS", "RGLD", "CUZ", "WTRG", "AMKR", "GMED", "SNOW", "BRX", "ABR", "AXSM", "FROG", "WTW", "KTOS", "TDS", "VCYT", "OKTA", "DKNG", "APD", "ICLR", "AVDX", "O", "LSCC", "CRK", "RHI", "CNK", "IONQ", "EQIX", "BPMC", "GME", "CPB", "JXN", "SAIA", "B", "ENPH", "RIOT", "PTGX", "EYE", "APLE", "FUN", "MQ", "SIRI", "TTWO", "KSS", "TARS", "SAP", "BTU", "PNW", "ASGN", "NOK", "KRC", "WW", "GO", "MNDY", "SJM", "SYM", "VRNS", "AEM", "MHK", "MP", "VITL", "KKR", "PVH", "BBIO", "OGS", "KGC", "GEO", "NSA", "MASI", "CAR", "ABM", "GT", "MDB", "AMR", "CPT", "DAR", "APLD", "LITE", "IRTC", "FIVN", "LUV", "AVA", "HASI", "ARQT", "AVTR", "PRGO", "VTR", "HUBS", "CNX", "MCHP", "ROKU", "RXRX", "CENX", "ALK", "AVAV", "NVAX", "SPB", "DD", "CCI", "FRPT", "FUBO", "DOC", "EQH", "NOG", "AES", "PCG", "WBA", "TENB", "EL", "SMTC", "CUK", "PCOR", "OUST", "Z", "ARE", "SAM", "MIR", "XRAY", "CC", "BCRX", "ADMA", "SLAB", "ACHC", "DBRG", "NLY", "SOUN", "TWLO", "RDNT", "GRPN", "TNXP", "DOW", "CRL", "DINO", "BRZE", "BA", "RGTI", "PL", "UPST", "AGCO", "DLTR", "WK", "AKRO", "KYMR", "VERX", "TEVA", "UUUU", "ESTC", "PGY", "PI", "CE", "GH", "GTLB", "IR", "AAL", "STEP", "SGRY", "HSAI", "VTRS", "ICUI", "STLA", "ILMN", "COMP", "AEVA", "PRCT", "ACHR", "MRVL", "CPRI", "HCTI", "PARR", "NVST", "ALKT", "CWAN", "HTZ", "CYTK", "COMM", "MRCY", "TDOC", "CZR", "AMBA", "IFF", "SNAP", "QBTS", "ALGM", "CALX", "KD", "FL", "ZETA", "SLNO", "GKOS", "INTA", "BEAM", "LUMN", "AI", "ALC", "DNB", "RNA", "HCC", "NOV", "PTEN", "MRUS", "W", "CABO", "RNG", "FRSH", "CCOI", "PAAS", "MBLY", "SATS", "SITM", "KMX", "CFLT", "ENVX", "ALHC", "MAN", "MPW", "TVTX", "SG", "IREN", "INTC", "VSAT", "S", "CRNX", "BAX", "NCNO", "RDW", "CLF", "IOVA", "SUI", "CIFR", "PCT", "PATH", "FOLD", "PTON", "NGD", "RVMD", "AG", "VFC", "MUR", "TWST", "RIG", "AGI", "VERA", "FYBR", "DYN", "GENI", "ALB", "NUVL", "HUN", "ACVA", "ASH", "IRT", "CRSP", "EXAS", "NWL", "QS", "PENN", "SRPT", "ZLAB", "SPR", "ALIT", "JOBY", "RGEN", "WBD", "LCID", "IAC", "NVTS", "AAP", "MDGL", "VERV", "HBI", "APVO", "NIO", "TNDM", "VKTX", "APLS", "ACLX", "RELY", "RUN", "PCVX", "RKT", "U", "AMC", "RARE", "DOCN", "NEOG", "AUR", "TXG", "RHP", "OPEN", "CNR", "LUNR", "JBLU", "ASAN", "RIVN", "COLD", "BB", "ESLT", "NTLA", "DAVE", "JPM", "SEDG", "BTI", "GFL", "TME", "CRDO", "MRNA", "WFC", "CASY", "CLS", "QUBT", "TBBK", "PLUG", "SAN", "FUTU", "MS", "GS", "DB", "PFGC", "SEIC", "SRAD", "STT", "RXO", "MAG", "BMO", "NTRS", "FSK", "CCEP", "TIGO", "C", "IBKR", "COF", "ING", "ATAT", "RCAT", "EWBC", "URTH", "BBAI", "WBS", "BPOP", "BK", "OLLI", "BCS", "MT", "TGB", "SCHW", "BBVA", "UNM", "SF", "APG", "MKL", "OMF", "VNET", "SYF", "TCBI", "RYAAY", "AWK", "NVMI", "L", "RJF", "FERG", "BFH", "GRAB", "STWD", "ONB", "OZK", "UBS", "GRRR", "RNST", "GFI", "LYG", "TSM", "BAP", "BUD", "FNB", "NXT", "FHN", "RF", "CFG", "AER", "RITM", "STNE", "HBAN", "DTM", "ERJ", "FLUT", "CALM", "TTE", "CADE", "EQNR", "ZION", "QFIN", "GRND", "KEY", "GNW", "RY", "MTB", "ASND", "CBSH", "ITUB", "RELX", "TS", "CRBG", "LMND", "NWG", "WTFC", "QGEN", "MLGO", "SE", "ASB", "WRB", "CX", "CFR", "ARES", "PNFP", "HUT", "AXP", "SNV", "WULF", "VOYA", "SPHR", "XPEV", "HIG", "HDB", "PNC", "SHEL", "BKU", "BAM", "AXS", "GSK", "BILI", "WGS", "FCNCA", "NGG", "HMC", "BAC", "VLY", "TPL", "TAK", "CMA", "LDOS", "BTBT", "ALLY", "HWC", "UEC", "CINF", "HOLO", "TFC", "UL", "EOSE", "PLMR", "ACI", "FITB", "MUFG", "YMM", "SSRM", "HIW", "OGE", "MMYT", "USB", "DNN", "KC", "CYBR", "AIG", "UBSI", "IBN", "GLNG", "LNC", "TRV", "BOH", "GL", "CAMT", "BTDR", "MU", "STM", "WAL", "UMBF", "BNS", "PGR", "TPG", "CB", "ARGX", "AZN", "SLG", "SMFG", "THG", "WTM", "HMY", "CHKP", "CNO", "ORI", "ALL", "ZWS", "LEGN", "NTRA", "UMC", "KNSL", "AGO", "NU", "ONON", "AMX", "AIZ", "SSB", "PB", "BANC", "VAL", "MTG", "XP", "ZIM", "AEP", "PFSI", "PBF", "SNY", "MULN", "EH", "ABEV", "MET", "ACGL", "OSCR", "AFL", "AFG", "CHX", "RGA", "GFS", "GGB", "FRO", "WIX", "GBCI", "RIO", "CI", "TAL", "GMAB", "SIGI", "ERIE", "COLB", "PECO", "VIST", "PFG", "POR", "STNG", "NICE", "BHF", "WEX", "FMX", "AUB", "HUM", "MMC", "PBR-A", "TM", "SQM", "RNR", "ARR", "CWST", "RLI", "BIO", "JHX", "CMC", "ADC", "HLN", "PRU", "ESNT", "KMPR", "KNTK", "DHI", "DSGX", "DEO", "EEFT", "INFY", "ATKR", "GLBE", "KBH", "PSA", "JD", "WLK", "LEN", "RH", "FAF", "ELV", "PRGS", "GLOB", "AGNC", "ANET", "TRIP", "SRRK", "ASTS", "XENE", "TOL", "MTH", "BHVN", "SMMT"]
-tickers = ["KLAC", "NVDA", "NEU", "APH", "MSFT", "UI", "CME", "HLI", "EXEL", "HWM", "LRCX", "APP", "SCCO", "NFLX", "LLY", "EHC", "VRSK", "MCO", "RMD", "ALLE", "CTAS", "META", "CRS", "AGX", "INTU", "HALO", "RCL", "HEI", "CF", "GOOG", "EME", "DRI", "WWD", "TT", "TMUS", "BR", "BAH", "FTDR", "TDG", "FCFS", "CBOE", "VST", "JNJ", "AVGO", "BLK", "EAT", "NTAP", "IESC", "COP", "MTDR", "AIT", "AMAT", "SFM", "CW", "TPR", "STX", "RL", "HIMS", "WTS", "HCA", "NDAQ", "VRT", "AMGN", "COST", "ESE", "ROL", "MPLX", "FAST", "NVT", "CTRA", "BMI", "COR", "MELI", "WING", "NEM", "NSC", "FIX", "LRN", "BWXT", "EXPE", "POWL", "WELL", "SXT", "MA", "UTHR", "GD", "USFD", "PM", "ETN", "QDEL", "EVR", "MDT", "VEEV", "BKNG", "WINA", "FICO", "FSS"]
+
+# --- FULLY CORRECTED 'METRIC_NAME_MAP' ---
+# (Existing mappings are preserved, and new ones are added)
 METRIC_NAME_MAP = {
+    # --- Existing Mappings ---
     "Dividends_Plus_Buyback_to_FCF": "(Dividends + Share Buyback) / FCF", "CapEx_to_DepAmor": "CapEx / (Depr + Amor)",
-    "ROA": "Return on Assets", "ROE": "Return on Equity", "ROIC": "Return On Invested Capital",
-    "Cash_ROIC": "Cash Return On Invested Capital", "PS_Ratio": "P/Sales", "EPS_Diluted": "Earnings Per Share, Diluted",
-    "Free_Cash_Flow": "Free Cash Flow", "FCF_to_Net_Income": "Free Cash Flow to Net Income", "Sales_Per_Share": "Sales Per Share",
-    "FCF_Per_Share": "Free Cash Flow Per Share", "Piotroski_F-Score": "Piotroski F-Score", "PE_Ratio": "P/E",
-    "Dividend_Yield": "Dividend Yield", "FCF_Yield": "FCF Yield", "Operating_Margin": "Operating Margin",
-    "Liabilities_to_Equity": "Liabilities to Equity Ratio", "Dividend_Payout_Ratio": "Dividend Payout Ratio",
-    "Operating_Leverage": "Operating Leverage", "Assets_Growth_TTM": "Assets Growth TTM", "Earnings_Growth_TTM": "Earnings Growth TTM",
-    "FCF_Growth_TTM": "FCF Growth TTM", "Sales_Growth_TTM": "Sales Growth TTM", "Assets_Growth_QOQ": "Assets Growth QOQ",
-    "Earnings_Growth_QOQ": "Earnings Growth QOQ", "FCF_Growth_QOQ": "FCF Growth QOQ", "Sales_Growth_QOQ": "Sales Growth QOQ",
-    "Assets_Growth_YOY": "Assets Growth YOY", "Earnings_Growth_YOY": "Earnings Growth YOY", "FCF_Growth_YOY": "FCF Growth YOY",
-    "Sales_Growth_YOY": "Sales Growth YOY", "Earnings_Yield": "Earnings Yield", "Market_Cap": "Market-Cap", "Debt_Ratio": "Debt Ratio",
-    "Gross_Profit_Margin": "Gross Profit Margin", "Inventory_Turnover": "Inventory Turnover", "Net_Profit_Margin": "Net Profit Margin",
-    "Asset_Turnover": "Asset Turnover", "Current_Ratio": "Current Ratio", "Dividends_to_FCF": "Dividends / FCF",
-    "Interest_Coverage": "Interest Coverage", "Quick_Ratio": "Quick Ratio", "Share_Buyback_to_FCF": "Share Buyback / FCF",
-    "Sharpe_Ratio": "Sharpe Ratio", "Relative_Z_Score": "Relative Z-Score", "Rolling_Market_Correlation": "Market Correlation",
-    "Correlation_Score": "Correlation_Score", "Trend": "Trend", "Q_Score": "Q Score", "Coverage_Score": "Coverage Score",
-    "Risk_Flag": "Risk_Flag", "Beta_to_SPY": "Beta_to_SPY", "GARCH_Vol": "GARCH_Vol", "Vision": "Vision", "Best_Factor": "Best_Factor",
-    "Value_Factor": "Value Factor", "Profitability_Factor": "Profitability Factor", "Log_Log_Utility": "Log_Log_Utility",
-    "Vol_Autocorr": "Vol_Autocorr", "Log_Log_Sharpe": "Log_Log_Sharpe", "Stop_Loss_Impact": "Stop_Loss_Impact",
+    "ROA": "Return on Assets", "ROE": "Return on Equity", "ROIC": "Return On Invested Capital", "Cash_ROIC": "Cash Return On Invested Capital",
+    "PS_Ratio": "P/Sales", "EPS_Diluted": "Earnings Per Share, Diluted", "Free_Cash_Flow": "Free Cash Flow", "FCF_to_Net_Income": "Free Cash Flow to Net Income",
+    "Sales_Per_Share": "Sales Per Share", "FCF_Per_Share": "Free Cash Flow Per Share", "Piotroski_F-Score": "Piotroski F-Score", "PE_Ratio": "P/E",
+    "Dividend_Yield": "Dividend Yield", "FCF_Yield": "FCF Yield", "Operating_Margin": "Operating Margin", "Liabilities_to_Equity": "Liabilities to Equity Ratio",
+    "Dividend_Payout_Ratio": "Dividend Payout Ratio", "Operating_Leverage": "Operating Leverage", "Assets_Growth_TTM": "Assets Growth TTM",
+    "Earnings_Growth_TTM": "Earnings Growth TTM", "FCF_Growth_TTM": "FCF Growth TTM", "Sales_Growth_TTM": "Sales Growth TTM", "Assets_Growth_QOQ": "Assets Growth QOQ",
+    "Earnings_Growth_QOQ": "Earnings Growth QOQ", "FCF_Growth_QOQ": "FCF Growth QOQ", "Sales_Growth_QOQ": "Sales Growth QOQ", "Assets_Growth_YOY": "Assets Growth YOY",
+    "Earnings_Growth_YOY": "Earnings Growth YOY", "FCF_Growth_YOY": "FCF Growth YOY", "Sales_Growth_YOY": "Sales Growth YOY", "Earnings_Yield": "Earnings Yield",
+    "Market_Cap": "Market-Cap", "Debt_Ratio": "Debt Ratio", "Gross_Profit_Margin": "Gross Profit Margin", "Inventory_Turnover": "Inventory Turnover",
+    "Net_Profit_Margin": "Net Profit Margin", "Asset_Turnover": "Asset Turnover", "Current_Ratio": "Current Ratio", "Dividends_to_FCF": "Dividends / FCF",
+    "Interest_Coverage": "Interest Coverage", "Quick_Ratio": "Quick Ratio", "Share_Buyback_to_FCF": "Share Buyback / FCF", "Sharpe_Ratio": "Sharpe Ratio",
+    "Relative_Z_Score": "Relative Z-Score", "Rolling_Market_Correlation": "Market Correlation", "Correlation_Score": "Correlation_Score", "Trend": "Trend",
+    "Q_Score": "Q Score", "Coverage_Score": "Coverage Score", "Risk_Flag": "Risk_Flag", "Beta_to_SPY": "Beta_to_SPY", "GARCH_Vol": "GARCH_Vol",
+    "Vision": "Vision", "Best_Factor": "Best_Factor", "Value_Factor": "Value Factor", "Profitability_Factor": "Profitability Factor",
+    "Log_Log_Utility": "Log_Log_Utility", "Vol_Autocorr": "Vol_Autocorr", "Log_Log_Sharpe": "Log_Log_Sharpe", "Stop_Loss_Impact": "Stop_Loss_Impact",
     "AR_Coeff": "AR_Coeff", "Tangible_Book_Value": "Tangible Book Value", "Return_On_Tangible_Equity": "Return on Tangible Equity",
-    "Insider_Ownership_Ratio": "Insider Ownership Ratio", "Earnings_Growth_Rate_5y": "5-Year Earnings Growth Rate",
-    "Peter_Lynch_Fair_Value": "Peter Lynch Fair Value", "Peter_Lynch_Fair_Value_Upside": "Peter Lynch Fair Value Upside",
-    "Revenue_Growth_Rate_5y": "5-Year Revenue Growth Rate", "Meets_Triple_Rule": "Meets Triple Rule", "Return_21d": "21-Day Return",
-    "Return_63d": "63-Day Return", "Return_126d": "126-Day Return", "Return_252d": "252-Day Return", "Audit_Risk": "Audit Risk",
-    "Board_Risk": "Board Risk", "Compensation_Risk": "Compensation Risk", "Shareholder_Rights_Risk": "Shareholder Rights Risk",
-    "Overall_Risk": "Overall Risk", "Institutional_Ownership_Ratio": "Institutional Ownership Ratio",
-    "Hurst_Exponent": "Hurst Exponent (Lo's R/S)", "Momentum": "Momentum", "Growth": "Growth", # <-- COMMA ADDED HERE
-    "Earnings_Price_Ratio": "Earnings-Price Ratio (E/P)", "Book_to_Market_Ratio": "Book-to-Market Ratio (B/M)",
-    "Beta_Down_Market": "Down-Market Beta", "Beta_Up_Market": "Up-Market Beta",
-    "Carry": "Shareholder Yield (Carry)", "Relative_Carry": "Relative Carry vs Sector",
-    "CS_Mean_Reversion": "Cross-Sectional Mean Reversion","Return_5d": "5-Day Return", # <--- ADDED NEW MAPPING
-    "Return_10d": "10-Day Return",
+    "Insider_Ownership_Ratio": "Insider Ownership Ratio", "Earnings_Growth_Rate_5y": "5-Year Earnings Growth Rate", "Peter_Lynch_Fair_Value": "Peter Lynch Fair Value",
+    "Peter_Lynch_Fair_Value_Upside": "Peter Lynch Fair Value Upside", "Revenue_Growth_Rate_5y": "5-Year Revenue Growth Rate", "Meets_Triple_Rule": "Meets Triple Rule",
+    "Return_21d": "21-Day Return", "Return_63d": "63-Day Return", "Return_126d": "126-Day Return", "Return_252d": "252-Day Return",
+    "Audit_Risk": "Audit Risk", "Board_Risk": "Board Risk", "Compensation_Risk": "Compensation Risk", "Shareholder_Rights_Risk": "Shareholder Rights Risk",
+    "Overall_Risk": "Overall Risk", "Institutional_Ownership_Ratio": "Institutional Ownership Ratio", "Hurst_Exponent": "Hurst Exponent (Lo's R/S)",
+    "Momentum": "Momentum", "Growth": "Growth", "Earnings_Price_Ratio": "Earnings-Price Ratio (E/P)", "Book_to_Market_Ratio": "Book-to-Market Ratio (B/M)",
+    "Beta_Down_Market": "Down-Market Beta", "Beta_Up_Market": "Up-Market Beta", "Carry": "Shareholder Yield (Carry)", "Relative_Carry": "Relative Carry vs Sector",
+    "CS_Mean_Reversion": "Cross-Sectional Mean Reversion","Return_5d": "5-Day Return", "Return_10d": "10-Day Return",
+    # --- START: NEW MAPPINGS ---
+    'LogMktCap': 'Log Market Cap', 'LogMktCapCubed': 'Log Market Cap Cubed', 'IndRel_TobinQ': 'Industry-Relative Tobin Q', 'ROEStddev20Q': 'ROE Stdev (20 Qtrs)',
+    'ROAStddev20Q': 'ROA Stdev (20 Qtrs)', 'ShareChg': 'Share Count Change', 'AccrualRatioBS': 'Accrual Ratio (Balance Sheet)', 'SusGrwRate': 'Sustainable Growth Rate',
+    'AstGrwth': 'Asset Growth', '3YAvgAnnSalesGrw': '3Y Avg Annual Sales Growth', 'AdjAccruals': 'Adjusted Accruals', 'Chg1YCACL': '1Y Change in Current Assets/Liabilities',
+    'CashCycle': 'Cash Conversion Cycle', 'IndRel_AccrualRatioCF': 'Industry-Relative Accrual Ratio (Cash Flow)', 'WCAccruals': 'Working Capital Accruals',
+    'TotalAccruals': 'Total Accruals', 'IntCovRatio': 'Interest Coverage Ratio', 'ChgSalesMargin': 'Change in Sales Margin', 'LTDE': 'Long-Term Debt to Equity',
+    'InvTurn': 'Inventory Turnover', 'WCapToSales': 'Working Capital to Sales', 'Chg3YEPS': '3Y EPS Change', 'SGPToSales': 'Sales & General Profit to Sales',
+    '3YAvgAnnEPSGrw': '3Y Avg Annual EPS Growth', 'DIVIDENDGROWTH': 'Dividend Growth', 'InvToAsset': 'Inventory to Assets', 'RONA': 'Return on Net Assets',
+    'DivperShareGrowth': 'Dividend Per Share Growth', 'GPMargin': 'Gross Profit Margin', 'WCapToAst': 'Working Capital to Assets', 'FinLev': 'Financial Leverage',
+    'LogAssets': 'Log of Total Assets', 'CACL': 'Current Assets to Current Liabilities', 'CFIC': 'Cash Flow to Invested Capital', 'EBITMargin': 'EBIT Margin',
+    'CashAst': 'Cash to Assets', 'DepToCapex': 'Depreciation to Capex', 'CFAst': 'Cash Flow to Assets', 'CashRatio': 'Cash Ratio', 'OEA': 'Operating Earnings to Assets',
+    'MVEToTL': 'Market Value of Equity to Total Liabilities', 'SolvencyRatio': 'Solvency Ratio', 'CFEqt': 'Cash Flow to Equity', 'SalesToInvCap': 'Sales to Invested Capital',
+    'FCFEV': 'Free Cash Flow to Enterprise Value', 'NIStab': 'Net Income Stability', 'FCFP': 'Free Cash Flow to Price', 'Altman_ZScore': 'Altman Z-Score',
+    'CapAcqRatio': 'Capital Acquisition Ratio', 'FCFEqt': 'Free Cash Flow to Equity', 'CashBurn': 'Cash Burn Rate', 'RecTurn': 'Receivables Turnover',
+    'CFROIC': 'Cash Flow Return on Invested Capital', 'OCFEqt': 'Operating Cash Flow to Equity', 'OCFRatio': 'Operating Cash Flow Ratio', 'FwdFCFPC': 'Forward FCF Per Capita',
+    'OCFP': 'Operating Cash Flow to Price', 'OCFEV': 'Operating Cash Flow to Enterprise Value', 'OEP': 'Operating Earnings to Price', 'CashEV': 'Cash to Enterprise Value',
+    'CashP': 'Cash to Price', 'AstP': 'Assets to Price', 'GFP': 'Gross Profit to Price', 'SP': 'Sales to Price', 'EBITDAEV': 'EBITDA to Enterprise Value',
+    'SEV': 'Sales to Enterprise Value', 'BP': 'Book to Price', 'STO': 'Share Turnover', 'AnnVol1M': 'Annualized Volatility (1M)', '5DVolSig': '5-Day Volume Signal',
+    'PM1M': 'Price Momentum (1M)', 'PrcTo260DL': 'Price to 260-Day Low', '14DayRSI': '14-Day RSI', '10DMACD': '10-Day MACD', 'PM5D': 'Price Momentum (5D)',
+    'PM6M': 'Price Momentum (6M)', '50DVolSig': '50-Day Volume Signal', 'AnnVol12M': 'Annualized Volatility (12M)', 'PM9M': 'Price Momentum (9M)',
+    'Alpha60M': 'Alpha (60M)', '20DStochastic': '20-Day Stochastic', 'PrcTo52WH': 'Price to 52-Week High', 'PM12M1M': 'Price Momentum (12M-1M)',
+    'Beta60M': 'Beta (60M)', 'RelPrStr_12M': 'Relative Price Strength (12M)', 'Amihud': 'Amihud Illiquidity'
+    # ... and so on for all new factors. A generic mapping is used below for brevity.
 }
-REVERSE_METRIC_NAME_MAP = {v: k for k, v in METRIC_NAME_MAP.items()}
 
+# --- Generic mapping for any unmapped new factors ---
+new_factor_list = [f for f in columns if f not in METRIC_NAME_MAP and f not in ["Ticker", "Name", "Sector", "Best_Factor", "Risk_Flag"]]
+for factor in new_factor_list:
+    # A simple transformation for a readable name
+    human_readable_name = factor.replace('_', ' ').title()
+    METRIC_NAME_MAP[factor] = human_readable_name
+tickers = ["KLAC", "NVDA", "NEU", "APH", "MSFT", "UI", "CME", "HLI", "EXEL", "HWM", "LRCX", "APP", "SCCO", "NFLX", "LLY", "EHC", "VRSK", "MCO", "RMD", "ALLE", "CTAS", "META", "CRS", "AGX", "INTU", "HALO", "RCL", "HEI", "CF", "GOOG", "EME", "DRI", "WWD", "TT", "TMUS", "BR", "BAH", "FTDR", "TDG", "FCFS", "CBOE", "VST", "JNJ", "AVGO", "BLK", "EAT", "NTAP", "IESC", "COP", "MTDR", "AIT", "AMAT", "SFM", "CW", "TPR", "STX", "RL", "HIMS", "WTS", "HCA", "NDAQ", "VRT", "AMGN", "COST", "ESE", "ROL", "MPLX", "FAST", "NVT", "CTRA", "BMI", "COR", "MELI", "WING", "NEM", "NSC", "FIX", "LRN", "BWXT", "EXPE", "POWL", "WELL", "SXT", "MA", "UTHR", "GD", "USFD", "PM", "ETN", "QDEL", "EVR", "MDT", "VEEV", "BKNG", "WINA", "FICO", "FSS", "FTNT", "PATK", "LECO", "GILD", "RSG", "MCK", "ICE", "CAKE", "PWR", "PLTR", "ALSN", "IPAR", "HESM", "GWW", "SYY", "ITW", "AWI", "PKG", "IBM", "QCOM", "CSCO", "CAH", "ITT", "LII", "DPZ", "URI", "TXRH", "TXN", "MO", "GSHD", "EBAY", "AJG", "FTI", "MSI", "ZTS", "CTRE", "IMO", "IDXX", "ORCL", "ITRI", "DY", "V", "GRMN", "PPC", "SPGI", "LEU", "UBER", "ALV", "LNG", "ADP", "SNPS", "TGLS", "GE", "PRIM", "UNP", "BSY", "MWA", "AXON", "TRGP", "EA", "ABT", "PH", "WAB", "FFIV", "JCI", "LIN", "VRSN", "MPWR", "TEL", "HD", "MAR", "MORN", "CACC", "NYT", "UHS", "QLYS", "SSNC", "CPRX", "LCII", "CL", "JBL", "OVV", "BX", "PJT", "YUM", "CVNA", "NXST", "FOX", "RRR", "DTE", "NTES", "WM", "LMT", "ACN", "DGX", "ROP", "MRK", "UGI", "BYD", "CR", "XOM", "DUOL", "MCD", "NDSN", "KTB", "LAD", "WMB", "APO", "MGY", "REVG", "ADI", "FN", "DE", "DLB", "GEN", "MNST", "HLT", "SBAC", "ENB", "ADT", "SYK", "CTSH", "EW", "BRO", "FLR", "CHTR", "VZ", "ARMK", "PLNT", "EXPD", "PNR", "PAYX", "MSA", "CHE", "GGG", "CDNS", "T", "AON", "CDW", "NRG", "IDCC", "CAT", "PTC", "TNL", "DIS", "UNH", "BRBR", "ATI", "DOCS", "LPLA", "JHG", "BJ", "SANM", "CCK", "ANSS", "PAG", "PR", "AMD", "XEL", "TW", "PIPR", "ATMU", "VMI", "WEC", "KMI", "RTX", "LULU", "HUBB","CORZ", "SHW", "OSK","RDDT", "PCAR", "CPA", "RS", "CACI", "AZO", "AROC", "PINS", "SNEX", "DORM", "PTCT", "MSCI", "PODD", "ECL", "ROK", "WDFC", "JKHY", "MTN", "HAL", "NOW", "TROW", "IRDM", "STE", "FDS", "MLI", "SBRA", "EXE", "PAYC", "HURN", "SCI", "GDDY", "BABA", "TSCO", "EMR", "ESAB", "CSL", "VICI", "DG", "SNA", "TDY", "GVA", "ORLY", "CHEF", "BMRN", "CIVI", "CHDN", "DK", "FHI", "EXR", "SU", "ENS", "MC", "HOOD", "DELL", "NXPI", "VRTX", "HON", "HAS", "UFPT", "KRYS", "CMCSA", "BDC", "ENSG", "LVS", "ULTA", "PG", "HRB", "ISRG", "SPXC", "GLPI", "ABBV", "EOG", "TER", "KR", "VMC", "PEGA", "HES", "GFF", "HSY", "SSD", "CPRT", "CEG", "UPWK", "CROX", "ATR", "EPD", "DCI", "HQY", "LOPE", "CORT", "TJX", "BSX", "BCPC", "ELS", "FLO", "H", "G", "DKS", "AEIS", "COKE", "EQT", "ROAD", "AMP", "VC", "HAE", "CVX", "WSM", "AAPL", "DDS", "REGN", "INGR", "WH", "MEDP", "CMG", "JAZZ", "AMT", "AEE", "PEP", "ET", "NFG", "LAZ", "KFY", "OSIS", "PCTY", "DOV", "WDC", "LAMR", "MMSI", "NTNX", "ZBH", "IT", "GHC", "WMT", "PHM", "ATO", "ACMR", "MATX", "TKR", "MAIN", "OXY", "WCC", "NEE", "TTC", "OKE", "QSR", "HLNE", "TRU", "CRM", "BKR", "IBP", "AYI", "CNM", "EXP", "URBN", "SKYW", "SWKS", "DT", "AME", "WMG", "BOOT", "FLEX", "WES", "ELF", "F", "PBH", "MANH", "AOS", "OTIS", "APPF", "CPNG", "MKSI", "OLED", "XYL", "GPOR", "SLB", "TMO", "TTMI", "ADM", "TYL", "AMZN", "PEG", "EPR", "STAG", "FANG", "PAGP", "SMLR", "NOC", "CWH", "ADBE", "DECK", "TXT", "LOW", "NBIX", "AMCR", "MSM", "CVLT", "K", "CNP", "YUMC", "SPSC", "CRH", "A", "BRK-A", "LNTH", "MKTX", "RPRX", "CSX", "PII", "SAIC", "NET", "ADSK", "GMS", "CARR", "RMBS", "THC", "IVZ", "CTVA", "CRUS", "PAA", "NNN", "CBT", "AR", "WMS", "CHH", "WPC", "MMS", "ES", "TDW", "FDX", "OHI", "KMB", "WCN", "NKE", "POWI", "WAT", "CMI", "CLX", "LOGI", "OTEX", "BMY", "FIVE", "UPS", "YOU", "BBWI", "EXC", "PPL", "NUE", "EFX", "STRL", "AMG", "MPC", "WSO", "DXCM", "CVS", "IEX", "WHD", "DVN", "TRMB", "KAI", "AVY", "WST", "TMDX", "GM", "CIEN", "UAL", "NSP", "HXL", "ZM", "YELP", "KVUE", "TTD", "LNT", "FOUR", "MAT", "FLS", "ROST", "PSX", "RPM", "KEX", "LKQ", "CP", "LTH", "CARG", "DDOG", "CGNX", "BROS", "ANF", "LHX", "PFE", "NVR", "OC", "TMHC", "MARA", "PANW", "AL", "GTLS", "GNTX", "MIDD", "GPN", "EMN", "GLW", "AVT", "PEN", "INFA", "BCO", "STZ", "HST", "CBRE", "FTAI", "ASO", "THO", "D", "TRNO", "OWL", "ZBRA", "RRC", "NI", "CWEN", "BLD", "ABNB", "CHD", "ACIW", "SKX", "POOL", "SKY", "KO", "VAC", "ED", "DVA", "SLGN", "GPC", "RKLB", "AMED", "PSN", "IQV", "FUL", "WFRD", "LH", "CLH", "LPX", "MUSA", "FE", "SMCI", "VIRT", "GEHC", "MMM", "GTES", "LEA", "TDC", "MAS", "ACM", "GNRC", "CVCO", "DOCU", "DBX", "ESS", "COHR", "KDP", "PPG", "DOX", "GPI", "BDX", "VNT", "GIS", "FNF", "PGNY", "OPCH", "BOX", "UDR", "MOH", "RBA", "JLL", "SHOO", "SBUX", "EGP", "BXP", "MLM", "CRC", "TGTX", "MTD", "ODFL", "UFPI", "APA", "MYRG", "CELH", "FI", "VNOM", "GPK", "PARA", "TEX", "RVLV", "BRKR", "KEYS", "OMC", "CDE", "JBHT", "BIIB", "FCX", "SRE", "ACAD", "MDLZ", "CMS", "INCY", "MTZ", "OGN", "ST", "SPG", "BALL", "EPRT", "LFUS", "ATGE", "CUBE", "INSM", "HTHT", "GATX", "IP", "J", "EXLS", "VLO", "HOLX", "XPO", "MTCH", "DAL", "ALKS", "LYB", "ENTG", "SLM", "BL", "ARRY", "CNC", "LW", "FMC", "ELAN", "ARW", "KNF", "YETI", "CAVA", "ESI", "SITE", "TREX", "WEN", "ABG", "VNO", "TGT", "MKC", "HP", "RRX", "BFAM", "DHR", "AVB", "MHO", "R", "TTEK", "SEE", "CNXC", "CRI", "NOVT", "MGM", "AA", "TOST", "BG", "KIM", "MSTR", "SMPL", "LEVI", "REG", "VVV", "PINC", "WSC", "MSGS", "ROIV", "NVS", "ETR", "SMG", "TGNA", "HRI", "ZS", "VRNA", "CCJ", "ALGN", "AMH", "BLDR", "DX", "STLD", "SWX", "LYV", "PSTG", "INOD", "TGI", "PK", "HPE", "BEN", "LYFT", "BZ", "SON", "CHWY", "SHAK", "WDAY", "SO", "CBZ", "EVRG", "ROOT", "FRT", "AN", "GXO", "CHRW", "PYPL", "HR", "KHC", "CCL", "HL", "TCOM", "GDS", "MTSI", "LBRT", "VSEC", "COO", "WYNN", "HOG", "AXTA", "HRL", "INVH", "SR", "GWRE", "HSIC", "FTV", "BCC", "MGNI", "ACLS", "ZTO", "CCCS", "IDA", "BBY", "APTV", "MOG-A", "PZZA", "EQR", "MAA", "FND", "RBLX", "SKT", "LIVN", "DRS", "SWK", "BURL", "ARCC", "KBR", "SNX", "ON", "FIS", "VSCO", "WU", "CSGP", "AAOI", "EPAM", "TFX", "TAP", "BKH", "MOS", "SYNA", "JEF", "SM", "AKAM", "TSLA", "POST", "NSIT", "GOLF", "WHR", "TEAM", "ITGR", "RGC", "VOD", "AAON", "COIN", "FSLR", "DV", "ALNY", "SIG", "BC", "TECH", "BWA", "SAND", "DUK", "TNET", "M", "TRP", "TPH", "PLAY", "IRM", "MOD", "MAC", "TSSI", "NCLH", "NFE", "HGV", "QRVO", "BILL", "QTWO", "IPG", "REXR", "ETSY", "NE", "DASH", "CRGY", "INSP", "BE", "COTY", "PLD", "TMC", "AFRM", "DEI", "CBRL", "SMR", "EG", "DXC", "LSTR", "TIGR", "NJR", "CAG", "DAN", "AEO", "TSN", "HII", "COLM", "WY", "FCN", "KNX", "KRG", "HPQ", "ORA", "CRWD", "FR", "SOFI", "WRBY", "CLSK", "EIX", "OLN", "RYTM", "IONS", "RGLD", "CUZ", "WTRG", "AMKR", "GMED", "SNOW", "BRX", "ABR", "AXSM", "FROG", "WTW", "KTOS", "TDS", "VCYT", "OKTA", "DKNG", "APD", "ICLR", "AVDX", "O", "LSCC", "CRK", "RHI", "CNK", "IONQ", "EQIX", "BPMC", "GME", "CPB", "JXN", "SAIA", "B", "ENPH", "RIOT", "PTGX", "EYE", "APLE", "FUN", "MQ", "SIRI", "TTWO", "KSS", "TARS", "SAP", "BTU", "PNW", "ASGN", "NOK", "KRC", "WW", "GO", "MNDY", "SJM", "SYM", "VRNS", "AEM", "MHK", "MP", "VITL", "KKR", "PVH", "BBIO", "OGS", "KGC", "GEO", "NSA", "MASI", "CAR", "ABM", "GT", "MDB", "AMR", "CPT", "DAR", "APLD", "LITE", "IRTC", "FIVN", "LUV", "AVA", "HASI", "ARQT", "AVTR", "PRGO", "VTR", "HUBS", "CNX", "MCHP", "ROKU", "RXRX", "CENX", "ALK", "AVAV", "NVAX", "SPB", "DD", "CCI", "FRPT", "FUBO", "DOC", "EQH", "NOG", "AES", "PCG", "WBA", "TENB", "EL", "SMTC", "CUK", "PCOR", "OUST", "Z", "ARE", "SAM", "MIR", "XRAY", "CC", "BCRX", "ADMA", "SLAB", "ACHC", "DBRG", "NLY", "SOUN", "TWLO", "RDNT", "GRPN", "TNXP", "DOW", "CRL", "DINO", "BRZE", "BA", "RGTI", "PL", "UPST", "AGCO", "DLTR", "WK", "AKRO", "KYMR", "VERX", "TEVA", "UUUU", "ESTC", "PGY", "PI", "CE", "GH", "GTLB", "IR", "AAL", "STEP", "SGRY", "HSAI", "VTRS", "ICUI", "STLA", "ILMN", "COMP", "AEVA", "PRCT", "ACHR", "MRVL", "CPRI", "HCTI", "PARR", "NVST", "ALKT", "CWAN", "HTZ", "CYTK", "COMM", "MRCY", "TDOC", "CZR", "AMBA", "IFF", "SNAP", "QBTS", "ALGM", "CALX", "KD", "FL", "ZETA", "SLNO", "GKOS", "INTA", "BEAM", "LUMN", "AI", "ALC", "DNB", "RNA", "HCC", "NOV", "PTEN", "MRUS", "W", "CABO", "RNG", "FRSH", "CCOI", "PAAS", "MBLY", "SATS", "SITM", "KMX", "CFLT", "ENVX", "ALHC", "MAN", "MPW", "TVTX", "SG", "IREN", "INTC", "VSAT", "S", "CRNX", "BAX", "NCNO", "RDW", "CLF", "IOVA", "SUI", "CIFR", "PCT", "PATH", "FOLD", "PTON", "NGD", "RVMD", "AG", "VFC", "MUR", "TWST", "RIG", "AGI", "VERA", "FYBR", "DYN", "GENI", "ALB", "NUVL", "HUN", "ACVA", "ASH", "IRT", "CRSP", "EXAS", "NWL", "QS", "PENN", "SRPT", "ZLAB", "SPR", "ALIT", "JOBY", "RGEN", "WBD", "LCID", "IAC", "NVTS", "AAP", "MDGL", "VERV", "HBI", "APVO", "NIO", "TNDM", "VKTX", "APLS", "ACLX", "RELY", "RUN", "PCVX", "RKT", "U", "AMC", "RARE", "DOCN", "NEOG", "AUR", "TXG", "RHP", "OPEN", "CNR", "LUNR", "JBLU", "ASAN", "RIVN", "COLD", "BB", "ESLT", "NTLA", "DAVE", "JPM", "SEDG", "BTI", "GFL", "TME", "CRDO", "MRNA", "WFC", "CASY", "CLS", "QUBT", "TBBK", "PLUG", "SAN", "FUTU", "MS", "GS", "DB", "PFGC", "SEIC", "SRAD", "STT", "RXO", "MAG", "BMO", "NTRS", "FSK", "CCEP", "TIGO", "C", "IBKR", "COF", "ING", "ATAT", "RCAT", "EWBC", "URTH", "BBAI", "WBS", "BPOP", "BK", "OLLI", "BCS", "MT", "TGB", "SCHW", "BBVA", "UNM", "SF", "APG", "MKL", "OMF", "VNET", "SYF", "TCBI", "RYAAY", "AWK", "NVMI", "L", "RJF", "FERG", "BFH", "GRAB", "STWD", "ONB", "OZK", "UBS", "GRRR", "RNST", "GFI", "LYG", "TSM", "BAP", "BUD", "FNB", "NXT", "FHN", "RF", "CFG", "AER", "RITM", "STNE", "HBAN", "DTM", "ERJ", "FLUT", "CALM", "TTE", "CADE", "EQNR", "ZION", "QFIN", "GRND", "KEY", "GNW", "RY", "MTB", "ASND", "CBSH", "ITUB", "RELX", "TS", "CRBG", "LMND", "NWG", "WTFC", "QGEN", "MLGO", "SE", "ASB", "WRB", "CX", "CFR", "ARES", "PNFP", "HUT", "AXP", "SNV", "WULF", "VOYA", "SPHR", "XPEV", "HIG", "HDB", "PNC", "SHEL", "BKU", "BAM", "AXS", "GSK", "BILI", "WGS", "FCNCA", "NGG", "HMC", "BAC", "VLY", "TPL", "TAK", "CMA", "LDOS", "BTBT", "ALLY", "HWC", "UEC", "CINF", "HOLO", "TFC", "UL", "EOSE", "PLMR", "ACI", "FITB", "MUFG", "YMM", "SSRM", "HIW", "OGE", "MMYT", "USB", "DNN", "KC", "CYBR", "AIG", "UBSI", "IBN", "GLNG", "LNC", "TRV", "BOH", "GL", "CAMT", "BTDR", "MU", "STM", "WAL", "UMBF", "BNS", "PGR", "TPG", "CB", "ARGX", "AZN", "SLG", "SMFG", "THG", "WTM", "HMY", "CHKP", "CNO", "ORI", "ALL", "ZWS", "LEGN", "NTRA", "UMC", "KNSL", "AGO", "NU", "ONON", "AMX", "AIZ", "SSB", "PB", "BANC", "VAL", "MTG", "XP", "ZIM", "AEP", "PFSI", "PBF", "SNY", "MULN", "EH", "ABEV", "MET", "ACGL", "OSCR", "AFL", "AFG", "CHX", "RGA", "GFS", "GGB", "FRO", "WIX", "GBCI", "RIO", "CI", "TAL", "GMAB", "SIGI", "ERIE", "COLB", "PECO", "VIST", "PFG", "POR", "STNG", "NICE", "BHF", "WEX", "FMX", "AUB", "HUM", "MMC", "PBR-A", "TM", "SQM", "RNR", "ARR", "CWST", "RLI", "BIO", "JHX", "CMC", "ADC", "HLN", "PRU", "ESNT", "KMPR", "KNTK", "DHI", "DSGX", "DEO", "EEFT", "INFY", "ATKR", "GLBE", "KBH", "PSA", "JD", "WLK", "LEN", "RH", "FAF", "ELV", "PRGS", "GLOB", "AGNC", "ANET", "TRIP", "SRRK", "ASTS", "XENE", "TOL", "MTH", "BHVN", "SMMT"]
+
+# --- `default_weights` updated with new factors at 0.0 ---
+default_weights = {
+    # --- Existing Weights ---
+    "(Dividends + Share Buyback) / FCF": 5.0, "CapEx / (Depr + Amor)": 4.5, "Debt Ratio": 6.0, "Gross Profit Margin": 7.5, "Inventory Turnover": 4.5,
+    "Net Profit Margin": 6.5, "Return on Assets": 6.0, "Assets Growth TTM": 5.5, "Assets Growth QOQ": 7.0, "Assets Growth YOY": 5.5, "FCF Growth TTM": 5.0,
+    "FCF Growth QOQ": 6.0, "FCF Growth YOY": 6.0, "Dividend Yield": 4.0, "FCF Yield": 6.5, "Operating Margin": 4.5, "Liabilities to Equity Ratio": 4.5,
+    "Earnings Per Share, Diluted": 4.5, "Dividend Payout Ratio": 0, "Return On Invested Capital": 6.0, "Piotroski F-Score": 6.5, "Operating Leverage": 5.5,
+    "Cash Return On Invested Capital": 6.0, "Asset Turnover": 4.5, "Current Ratio": 6.0, "Dividends / FCF": 5.5, "Interest Coverage": 2.5, "Quick Ratio": 4.5,
+    "Return on Equity": 7.0, "Share Buyback / FCF": 5.5, "Earnings Growth TTM": 5.5, "Earnings Growth QOQ": 6.5, "Earnings Growth YOY": 6.5,
+    "Sales Growth TTM": 5.5, "Sales Growth QOQ": 5.5, "Sales Growth YOY": 6.5, "Earnings Yield": 6.5, "Market-Cap": 4.5, "P/E": 4.5, "P/Sales": 4.5,
+    "Free Cash Flow": 3.5, "Free Cash Flow to Net Income": 5.5, "Sales Per Share": 4.5, "Free Cash Flow Per Share": 5.5, "Sharpe Ratio": 18.0,
+    "Relative Z-Score": 18.0, "Market Correlation": 4.5, "Correlation_Score": 4.5, "Trend": 5.5, "Q Score": 6.5, "Coverage Score": 5.5, "Beta_to_SPY": -10,
+    "GARCH_Vol": 5.5, "Vision": 4.5, "Value Factor": 6.0, "Profitability_Factor": 6.0, "Log_Log_Utility": 5.0, "Vol_Autocorr": 5.0,
+    "Log_Log_Sharpe": 10.0, "Stop_Loss_Impact": 2.5, "AR_Coeff": 4.0, "Tangible_Book_Value": 4.5, "Return_On_Tangible_Equity": 6.0,
+    "Insider_Ownership_Ratio": 6.0, "Earnings_Growth_Rate_5y": 5.5, "Peter_Lynch_Fair_Value": 4.5, "Peter_Lynch_Fair_Value_Upside": 6.0,
+    "Revenue_Growth_Rate_5y": 5.5, "Meets_Triple_Rule": 3.0, "Return_21d": 4.0, "Return_63d": 4.5, "Return_126d": 5.0, "Return_252d": 5.5,
+    "Audit Risk": 3.0, "Board Risk": 3.0, "Compensation Risk": 3.0, "Shareholder Rights Risk": 3.0, "Overall Risk": 4.0, "Institutional Ownership Ratio": 6.0,
+    "Hurst Exponent (Lo's R/S)": 6.0, "5-Day Return": 3.0, "10-Day Return": 3.5,
+}
+
+# --- Add all new factors with a default weight of 0.0 ---
+for short_name, long_name in METRIC_NAME_MAP.items():
+    if long_name not in default_weights:
+        default_weights[long_name] = 0.0
 
 ################################################################################
 # SECTION 1: ALL FUNCTION DEFINITIONS
 ################################################################################
-################################################################################
-# SECTION 1: ALL FUNCTION DEFINITIONS
-################################################################################
-# --- Helper functions for robust volatility (add these to your script) ---
-BUSINESS_DAYS_IN_YEAR = 252 # Common assumption for financial calculations
-
-def resample_prices_to_business_day_index(price: pd.Series) -> pd.Series:
-    """
-    Resamples a price series to a daily (business day) frequency, forward-filling NaNs.
-    Assumes `price` series has a DatetimeIndex.
-    """
-    if price.empty:
-        return price
-    if not isinstance(price.index, pd.DatetimeIndex):
-        price.index = pd.to_datetime(price.index)
-    return price.resample('B').ffill().dropna()
-
-def simple_ewvol_calc(
-    daily_returns: pd.Series, days: int = 35, min_periods: int = 10, **ignored_kwargs
-) -> pd.Series:
-    if daily_returns.empty or len(daily_returns.dropna()) < min_periods:
-        return pd.Series(np.nan, index=daily_returns.index)
-    vol = daily_returns.ewm(adjust=True, span=days, min_periods=min_periods).std()
-    return vol
-
-def apply_min_vol(vol: pd.Series, vol_abs_min: float = 0.0000000001) -> pd.Series:
-    if vol.empty: return pd.Series(dtype=float)
-    temp_vol = vol.copy()
-    temp_vol[temp_vol < vol_abs_min] = vol_abs_min
-    return temp_vol
-
-def apply_vol_floor(
-    vol: pd.Series,
-    floor_min_quant: float = 0.05,
-    floor_min_periods: int = 100,
-    floor_days: int = 500,
-) -> pd.Series:
-    if vol.empty: return pd.Series(dtype=float)
-    vol_min = vol.rolling(window=floor_days, min_periods=floor_min_periods).quantile(q=floor_min_quant)
-    if not vol_min.empty:
-        vol_min = vol_min.fillna(0.0).ffill()
-    else:
-        return vol
-    vol_floored = np.maximum(vol, vol_min)
-    return vol_floored
-
-def backfill_vol(vol: pd.Series) -> pd.Series:
-    if vol.empty: return pd.Series(dtype=float)
-    vol_forward_fill = vol.ffill()
-    vol_backfilled = vol_forward_fill.bfill()
-    return vol_backfilled
-
-# --- MODIFIED `calculate_ewma_volatility` FUNCTION ---
-# This is the function you should replace.
-def calculate_ewma_volatility(returns_series: pd.Series, span: int = 63, annualize: bool = True):
-    """
-    Calculates a robust, exponential volatility. This function replaces the simpler
-    EWMA volatility calculation with a more advanced version that handles floors and minimums.
-
-    Args:
-        returns_series (pd.Series): Daily percentage returns.
-        span (int): The number of days in lookback for EWMA.
-        annualize (bool): Whether to annualize the volatility.
-
-    Returns:
-        pd.Series: Robustly calculated conditional volatility.
-    """
-    if returns_series.empty or returns_series.isnull().all():
-        return pd.Series(np.nan, index=returns_series.index)
-
-    # Core robust calculation using the helper functions
-    vol = simple_ewvol_calc(returns_series, days=span, min_periods=int(span/3))
-    if vol.empty:
-        return pd.Series(np.nan, index=returns_series.index)
-
-    vol = apply_min_vol(vol)
-    vol = apply_vol_floor(vol, floor_days=252, floor_min_periods=100) # Use reasonable defaults
-    vol = backfill_vol(vol)
-
-    if annualize:
-        vol *= np.sqrt(BUSINESS_DAYS_IN_YEAR)
-
-    # Reindex to ensure the final series has the same index as the input
-    return vol.reindex(returns_series.index, method='ffill').bfill()
-def _calculate_rsi(series, window=14):
-    if series.empty or len(series) < window + 1:
-        return np.nan
-    delta = series.diff().dropna()
-    gain = (delta.where(delta > 0, 0)).rolling(window=window, min_periods=window).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=window, min_periods=window).mean()
-    
-    rs = _safe_division(gain, loss, 0) # If loss is 0, RS is inf; if gain is 0, RS is 0
-    if pd.isna(rs): return np.nan
-    if loss.iloc[-1] == 0 and gain.iloc[-1] > 0: return 100.0 # Pure uptrend
-    if gain.iloc[-1] == 0 and loss.iloc[-1] > 0: return 0.0 # Pure downtrend
-    return 100 - (100 / (1 + rs.iloc[-1])) if rs.iloc[-1] >= 0 else np.nan
-
-def _calculate_macd(series, fast_window=12, slow_window=26, signal_window=9):
-    if series.empty or len(series) < slow_window + signal_window:
-        return np.nan, np.nan
-    ema_fast = series.ewm(span=fast_window, adjust=False, min_periods=fast_window).mean()
-    ema_slow = series.ewm(span=slow_window, adjust=False, min_periods=slow_window).mean()
-    
-    macd_line = ema_fast - ema_slow
-    signal_line = macd_line.ewm(span=signal_window, adjust=False, min_periods=signal_window).mean()
-    
-    if macd_line.empty or signal_line.empty: return np.nan, np.nan
-    return macd_line.iloc[-1], signal_line.iloc[-1]
-
-def _calculate_stochastic_oscillator(high, low, close, k_window=14, d_window=3):
-    if close.empty or len(close) < k_window + d_window:
-        return np.nan, np.nan
-    
-    lowest_low = low.rolling(window=k_window, min_periods=k_window).min()
-    highest_high = high.rolling(window=k_window, min_periods=k_window).max()
-    
-    # %K = ((Close - Lowest Low) / (Highest High - Lowest Low)) * 100
-    K_raw = 100 * _safe_division(close - lowest_low, highest_high - lowest_low)
-    
-    # %D = 3-period simple moving average of %K
-    D_line = K_raw.rolling(window=d_window, min_periods=d_window).mean()
-    
-    if K_raw.empty or D_line.empty: return np.nan, np.nan
-    return K_raw.iloc[-1], D_line.iloc[-1]        
-def _calculate_amihud_illiquidity(volume_series, returns_series, window=20):
-    if volume_series.empty or returns_series.empty or len(volume_series) < window or len(returns_series) < window:
-        return np.nan
-    
-    # Align data by index
-    common_index = volume_series.index.intersection(returns_series.index)
-    vol = volume_series.loc[common_index].tail(window)
-    ret = returns_series.loc[common_index].tail(window)
-
-    if vol.empty or ret.empty or (vol == 0).all():
-        return np.nan
-
-    # Amihud (daily) = |Return| / Volume in Dollars
-    # Assuming volume is in shares, need to convert to dollars using price
-    # Returns_series is usually pct_change, so we use absolute value for illiquidity.
-    
-    # We need price for volume in dollars. If history is available, we use that.
-    # Otherwise, we can only approximate. For this context, let's assume `returns_series`
-    # are already actual daily returns for simplicity, and volume is share volume.
-    # We need to compute dollar volume per day.
-    # From the main code, `dollar_volume` is already calculated.
-    
-    # If `returns_series` are actual simple returns (not log returns here)
-    # This factor is often calculated on simple returns *100 (for percentage)
-    
-    daily_illiquidity = _safe_division(ret.abs(), vol) # This is where price is usually needed to convert vol to dollar volume
-    
-    # For now, if we don't have price inside this helper, this is a proxy.
-    # A proper Amihud would be |returns| / (Volume * Price)
-    # Let's use `dollar_volume_90d` if that's available in `data` for the main function.
-    # For this helper, assuming input `volume_series` is already dollar volume or adjusted.
-    
-    return daily_illiquidity.mean() if not daily_illiquidity.empty else np.nan        
-def _calculate_altman_z_score(info, financials, balancesheet, current_price):
-    try:
-        # T1 = Working Capital / Total Assets
-        current_assets = get_value(balancesheet, ['Current Assets', 'Total Current Assets', 'CurrentAssets'])
-        current_liabilities = get_value(balancesheet, ['Current Liabilities', 'Total Current Liabilities', 'CurrentLiabilities'])
-        total_assets = get_value(balancesheet, ['Total Assets', 'Assets', 'TotalAssets'])
-        working_capital = current_assets - current_liabilities
-        T1 = _safe_division(working_capital, total_assets)
-
-        # T2 = Retained Earnings / Total Assets
-        retained_earnings = get_value(balancesheet, ['Retained Earnings'])
-        T2 = _safe_division(retained_earnings, total_assets)
-
-        # T3 = EBIT / Total Assets
-        ebit = get_value(financials, ['EBIT', 'Operating Income', 'Earnings Before Interest And Taxes'])
-        T3 = _safe_division(ebit, total_assets)
-
-        # T4 = Market Value of Equity / Total Liabilities
-        shares_outstanding = info.get('sharesOutstanding')
-        market_value_equity = shares_outstanding * current_price if shares_outstanding and current_price else np.nan
-        total_liabilities = get_value(balancesheet, ['Total Liabilities', 'Liabilities', 'TotalLiab'])
-        T4 = _safe_division(market_value_equity, total_liabilities)
-
-        # T5 = Sales / Total Assets
-        total_revenue = get_value(financials, ['Total Revenue', 'Revenue'])
-        T5 = _safe_division(total_revenue, total_assets)
-
-        if any(pd.isna([T1, T2, T3, T4, T5])):
-            return np.nan
-
-        z_score = 1.2 * T1 + 1.4 * T2 + 3.3 * T3 + 0.6 * T4 + 1.0 * T5
-        return z_score
-    except Exception as e:
-        logging.warning(f"Error calculating Altman Z-Score: {e}")
-        return np.nan        
-def _calculate_tobin_q(market_cap, total_assets, total_liabilities, current_liabilities):
-    # Approximation of Tobin's Q using market cap for equity and book value for debt
-    # Tobin's Q = (Market Value of Equity + Market Value of Debt) / (Book Value of Equity + Book Value of Debt)
-    # Simplified: (Market Cap + Total Liabilities - Current Liabilities) / Total Assets
-    if pd.isna(market_cap) or pd.isna(total_assets) or pd.isna(total_liabilities) or pd.isna(current_liabilities):
-        return np.nan
-    market_value_debt_approx = total_liabilities - current_liabilities # Non-current liabilities
-    return _safe_division(market_cap + market_value_debt_approx, total_assets)        
-def _calculate_sustainable_growth_rate(roe, dividend_payout_ratio):
-    # Sustainable Growth Rate = ROE * (1 - Dividend Payout Ratio)
-    if pd.isna(roe) or pd.isna(dividend_payout_ratio):
-        return np.nan
-    retained_earnings_ratio = (1 - dividend_payout_ratio)
-    return roe * retained_earnings_ratio        
-def _calculate_cash_conversion_cycle(inventory_days, receivables_days, payables_days):
-    # Cash Conversion Cycle = Days Inventory Outstanding + Days Sales Outstanding - Days Payables Outstanding
-    if pd.isna(inventory_days) or pd.isna(receivables_days) or pd.isna(payables_days):
-        return np.nan
-    return inventory_days + receivables_days - payables_days
-
-def _calculate_net_working_capital(current_assets, current_liabilities):
-    if pd.isna(current_assets) or pd.isna(current_liabilities):
-        return np.nan
-    return current_assets - current_liabilities
+# --- ADD THESE NEW HELPER FUNCTIONS to SECTION 1 ---
+BUSINESS_DAYS_IN_YEAR = 252
 
 def _get_quarterly_value(df, possible_keys, col_index=0):
-    """
-    Safely extracts a quarterly financial value from a DataFrame (quarterly_financials, etc.).
-    YFinance quarterly data is typically ordered descending by date, so index 0 is latest.
-    """
-    if df is None or df.empty:
-        return np.nan
+    """Safely extracts a quarterly financial value from a DataFrame."""
+    if df is None or df.empty: return np.nan
     for key in possible_keys:
         if key in df.index:
             try:
                 if len(df.columns) > col_index:
                     return pd.to_numeric(df.loc[key].iloc[col_index], errors='coerce')
-            except IndexError:
-                continue
+            except IndexError: continue
     return np.nan
 
 def _safe_division(numerator, denominator, default_val=np.nan):
     """Performs division, handling NaN/None inputs and zero denominators."""
-    if pd.isna(numerator) or pd.isna(denominator):
-        return default_val
-    if denominator == 0:
+    if pd.isna(numerator) or pd.isna(denominator) or denominator == 0:
         return default_val
     return numerator / denominator
 
 def _calculate_annualized_growth(current_val, past_val, num_periods):
-    """Calculates annualized growth rate over multiple periods."""
-    if pd.isna(current_val) or pd.isna(past_val) or past_val <= 0 or num_periods == 0:
-        return np.nan
+    """Calculates annualized growth rate."""
+    if pd.isna(current_val) or pd.isna(past_val) or past_val <= 0 or num_periods == 0: return np.nan
     try:
-        # Handle cases where current_val/past_val might be negative or lead to math domain error
         ratio = current_val / past_val
-        if ratio < 0:
-            # If there's a sign change, growth is ill-defined in geometric terms.
-            # A common approach is to return NaN or a heuristic like linear growth.
-            return np.nan # Or calculate (current - past) / abs(past) if linear is preferred.
-        
+        if ratio < 0: return np.nan
         return ((ratio)**(1/num_periods) - 1) * 100
-    except Exception:
-        return np.nan
+    except Exception: return np.nan
 
-def _calculate_historical_std(series, window):
-    """Calculates rolling standard deviation for a given window."""
-    if series.empty or len(series.dropna()) < window:
-        return np.nan
-    return series.dropna().tail(window).std()
+def _calculate_rsi(series, window=14):
+    if series.empty or len(series) < window + 1: return np.nan
+    delta = series.diff().dropna()
+    gain = (delta.where(delta > 0, 0)).rolling(window=window, min_periods=1).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=window, min_periods=1).mean()
+    if loss.iloc[-1] == 0: return 100.0 if gain.iloc[-1] > 0 else 50.0
+    rs = gain.iloc[-1] / loss.iloc[-1]
+    return 100 - (100 / (1 + rs))
 
-def _calculate_slope(series, window):
-    """Calculates the slope of a linear regression over a time series window."""
-    if series.empty or len(series.dropna()) < window:
-        return np.nan
-    y = series.dropna().tail(window)
-    if len(y) < 2 or y.std() == 0: # Ensure enough non-constant data for regression
-        return np.nan
-    x = np.arange(len(y))
-    slope, _, _, _, _ = linregress(x, y)
-    return slope
+def _calculate_macd(series, fast_window=12, slow_window=26):
+    if series.empty or len(series) < slow_window: return np.nan
+    ema_fast = series.ewm(span=fast_window, adjust=False).mean()
+    ema_slow = series.ewm(span=slow_window, adjust=False).mean()
+    return (ema_fast.iloc[-1] - ema_slow.iloc[-1])
+
+def _calculate_stochastic_oscillator(high, low, close, k_window=14):
+    if close.empty or len(close) < k_window: return np.nan
+    lowest_low = low.rolling(window=k_window).min()
+    highest_high = high.rolling(window=k_window).max()
+    return 100 * _safe_division(close.iloc[-1] - lowest_low.iloc[-1], highest_high.iloc[-1] - lowest_low.iloc[-1])
+
+def _calculate_amihud_illiquidity(dollar_volume_series, returns_series):
+    if dollar_volume_series.empty or returns_series.empty: return np.nan
+    common_index = dollar_volume_series.index.intersection(returns_series.index)
+    if len(common_index) < 20: return np.nan
+    vol = dollar_volume_series.loc[common_index]
+    ret = returns_series.loc[common_index]
+    daily_illiquidity = _safe_division(ret.abs(), vol)
+    return daily_illiquidity.mean() * 1e6 # Scale for readability
+
+def _calculate_altman_z_score(info, financials, balancesheet, current_price):
+    try:
+        current_assets = get_value(balancesheet, ['Total Current Assets', 'CurrentAssets'])
+        current_liabilities = get_value(balancesheet, ['Total Current Liabilities', 'CurrentLiabilities'])
+        total_assets = get_value(balancesheet, ['Total Assets', 'TotalAssets'])
+        working_capital = current_assets - current_liabilities
+        T1 = _safe_division(working_capital, total_assets)
+
+        retained_earnings = get_value(balancesheet, ['Retained Earnings'])
+        T2 = _safe_division(retained_earnings, total_assets)
+
+        ebit = get_value(financials, ['EBIT', 'Operating Income'])
+        T3 = _safe_division(ebit, total_assets)
+
+        market_cap = info.get('marketCap')
+        total_liabilities = get_value(balancesheet, ['Total Liabilities', 'TotalLiab'])
+        T4 = _safe_division(market_cap, total_liabilities)
+
+        total_revenue = get_value(financials, ['Total Revenue', 'TotalRevenue'])
+        T5 = _safe_division(total_revenue, total_assets)
+
+        if any(pd.isna([T1, T2, T3, T4, T5])): return np.nan
+        return 1.2*T1 + 1.4*T2 + 3.3*T3 + 0.6*T4 + 1.0*T5
+    except Exception: return np.nan
+
+# --- REPLACE your old `calculate_ewma_volatility` with this more robust one ---
+def simple_ewvol_calc(daily_returns: pd.Series, days: int = 35, min_periods: int = 10, **ignored_kwargs) -> pd.Series:
+    if daily_returns.empty or len(daily_returns.dropna()) < min_periods: return pd.Series(np.nan, index=daily_returns.index)
+    return daily_returns.ewm(adjust=True, span=days, min_periods=min_periods).std()
+
+def apply_min_vol(vol: pd.Series, vol_abs_min: float = 1e-10) -> pd.Series:
+    if vol.empty: return pd.Series(dtype=float)
+    return vol.clip(lower=vol_abs_min)
+
+def apply_vol_floor(vol: pd.Series, floor_min_quant: float = 0.05, floor_min_periods: int = 100, floor_days: int = 500) -> pd.Series:
+    if vol.empty: return pd.Series(dtype=float)
+    vol_min = vol.rolling(window=floor_days, min_periods=floor_min_periods).quantile(q=floor_min_quant).ffill()
+    return np.maximum(vol, vol_min)
+
+def backfill_vol(vol: pd.Series) -> pd.Series:
+    if vol.empty: return pd.Series(dtype=float)
+    return vol.ffill().bfill()
+    
+# (This is the replacement function)
+def calculate_ewma_volatility(returns_series: pd.Series, span: int = 63, annualize: bool = True):
+    if returns_series.empty or returns_series.isnull().all(): return pd.Series(np.nan, index=returns_series.index)
+    vol = simple_ewvol_calc(returns_series, days=span, min_periods=int(span/3))
+    if vol.empty: return pd.Series(np.nan, index=returns_series.index)
+    vol = apply_min_vol(vol)
+    vol = apply_vol_floor(vol, floor_days=252, floor_min_periods=100)
+    vol = backfill_vol(vol)
+    if annualize: vol *= np.sqrt(BUSINESS_DAYS_IN_YEAR)
+    return vol.reindex(returns_series.index, method='ffill').bfill()
 # --- Helper Functions ---
 def calculate_growth(current, previous):
     if pd.isna(current) or pd.isna(previous) or previous == 0: return np.nan
@@ -1387,7 +1263,7 @@ def display_deep_dive_data(ticker_symbol):
 
 # --- Advanced Metric & Data Fetching Functions ---
 @lru_cache(maxsize=None)
-def fetch_etf_history(ticker, period="5y"):
+def fetch_etf_history(ticker, period="3y"):
     history = yf.Ticker(ticker).history(period=period, auto_adjust=True, interval="1d")
     if history.empty or 'Close' not in history.columns: raise ValueError(f"No valid data for {ticker}")
     history.index = history.index.tz_localize(None)
@@ -1396,7 +1272,7 @@ def fetch_etf_history(ticker, period="5y"):
     return history
 
 @st.cache_data
-def fetch_all_etf_histories(_etf_list, period="5y"):
+def fetch_all_etf_histories(_etf_list, period="3y"):
     etf_histories = {}
     with ThreadPoolExecutor(max_workers=10) as executor:
         future_to_etf = {executor.submit(fetch_etf_history, etf, period): etf for etf in _etf_list}
@@ -1408,19 +1284,8 @@ def fetch_all_etf_histories(_etf_list, period="5y"):
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 def fetch_ticker_data(ticker_symbol):
-    """
-    --- THIS IS THE CORRECTED, ROBUST VERSION ---
-    Fetches data and safely handles timezones.
-    """
     ticker = yf.Ticker(ticker_symbol)
-    
-    # 1. Fetch data WITHOUT tz_localize first
-    history = ticker.history(period="5y", auto_adjust=True, interval="1d")
-    
-    # 2. SAFELY handle the timezone. Check if it exists before trying to remove it.
-    if not history.empty and history.index.tz is not None:
-        history = history.tz_convert(None)
-        
+    history = ticker.history(period="3y", auto_adjust=True, interval="1d").tz_localize(None)
     info = ticker.info
     financials = ticker.financials
     balancesheet = ticker.balance_sheet
@@ -1428,8 +1293,8 @@ def fetch_ticker_data(ticker_symbol):
     quarterly_financials = ticker.quarterly_financials
     quarterly_balancesheet = ticker.quarterly_balance_sheet
     quarterly_cashflow = ticker.quarterly_cashflow
-    
     return ticker, history, info, financials, balancesheet, cashflow, quarterly_financials, quarterly_balancesheet, quarterly_cashflow
+
 # --- Quantitative Functions ---
 
 def calculate_mahalanobis_metrics(returns, cov_matrix, periods=252):
@@ -2635,38 +2500,38 @@ def calculate_pure_returns(df, characteristics, target='Return_252d', vif_thresh
         logging.error(f"Pure returns regression failed: {e}")
         return pd.Series(dtype=float, name="PureReturns")
 # We will use a simplified vol calculation here for demonstration.
-
-def calculate_ewma_volatility(returns_series, span=63, annualize=True):
+# --- ADD THIS NEW FUNCTION to SECTION 1 ---
+def calculate_industry_relative_factors(df):
     """
-    Calculates Exponentially Weighted Moving Average (EWMA) volatility.
-    
-    Args:
-        returns_series (pd.Series): Daily percentage returns.
-        span (int): The span for the EWMA calculation (e.g., 63 for approx 3 months).
-        annualize (bool): Whether to annualize the volatility.
-        
-    Returns:
-        pd.Series: EWMA conditional volatility.
+    Calculates industry-relative factors after all tickers have been processed.
+    This is a post-processing step.
     """
-    if returns_series.empty or len(returns_series.dropna()) < 2:
-        return pd.Series(np.nan, index=returns_series.index)
-    
-    # Square the returns to get daily variances
-    squared_returns = returns_series.dropna()**2
-    
-    # Calculate EWMA of squared returns to get conditional variance
-    ewma_variance = squared_returns.ewm(span=span, adjust=False).mean()
-    
-    # Take the square root to get conditional volatility
-    ewma_vol = np.sqrt(ewma_variance)
-    
-    if annualize:
-        ewma_vol *= np.sqrt(252) # Annualize daily volatility
-        
-    # Reindex to original returns series to maintain length, filling initial NaNs
-    return ewma_vol.reindex(returns_series.index, method='ffill').bfill()
+    st.write("Calculating industry-relative factors...")
+    if 'Sector' not in df.columns or df.empty:
+        return df
 
+    # List of base factors that have an industry-relative version
+    # Example: We calculated 'TobinQ', now we calculate 'IndRel_TobinQ'
+    factors_to_adjust = [
+        'TobinQ', 'SusGrwRate', 'CashCycle', 'DA', 'WCAccruals', 'ShareChg',
+        # Add the base name for every 'IndRel_' factor you implement
+    ]
 
+    for factor in factors_to_adjust:
+        ind_rel_factor = f"IndRel_{factor}"
+        if factor in df.columns and ind_rel_factor in df.columns:
+            # Calculate as: Value - Industry Median
+            industry_median = df.groupby('Sector')[factor].transform('median')
+            df[ind_rel_factor] = df[factor] - industry_median
+    
+    st.write("Industry-relative calculations complete.")
+    return df
+
+# --- IN YOUR `main()` FUNCTION, ADD THIS CALL ---
+# Find this line:
+# results_df, failed_tickers, returns_dict = process_tickers(tickers, etf_histories, sector_etf_map)
+
+# And ADD the new function call immediately after it:
 @lru_cache(maxsize=1024)
 def calculate_returns_cached(ticker, periods_tuple):
     periods = list(periods_tuple)
@@ -2693,272 +2558,291 @@ def calculate_returns_cached(ticker, periods_tuple):
 
 def process_single_ticker(ticker_symbol, etf_histories, sector_etf_map):
     """
-    Fetches and processes a single ticker's data, calculating a comprehensive set of base and institutional factors.
+    Processes a single ticker to calculate a wide range of fundamental, technical, and advanced quantitative factors.
+    This function is designed to be called concurrently for multiple tickers.
+    
+    It fetches annual and quarterly financial statements, price history, and company info.
+    It then computes over 100 distinct metrics and returns them in a structured list,
+    along with the ticker's log returns for further portfolio analysis.
+    
+    Factors that cannot be calculated due to missing data or because they require external
+    (e.g., analyst estimate) data sources are gracefully handled and set to np.nan.
     """
     try:
-        # 1. FETCH DATA
-        ticker, history, info, financials, balancesheet, cashflow, quarterly_financials, quarterly_balancesheet, quarterly_cashflow = fetch_ticker_data(ticker_symbol)
+        # Step 1: Fetch all necessary data for the ticker
+        _, history, info, financials, balancesheet, cashflow, quarterly_financials, quarterly_balancesheet, quarterly_cashflow = fetch_ticker_data(ticker_symbol)
 
-        # 2. INITIALIZE & VALIDATE
-        data = {col: np.nan for col in columns}
+        # Initial validation: If core data is missing, we can't proceed.
+        if history.empty or not info:
+            failed_data = {col: np.nan for col in columns}
+            failed_data['Ticker'] = ticker_symbol
+            failed_data['Name'] = f"{ticker_symbol} (Failed to fetch history or info)"
+            return [failed_data.get(col) for col in columns], pd.Series(dtype=float)
+
+        # Step 2: Initialize data dictionary and basic info
+        data = {col: np.nan for col in columns} # Initialize all columns with NaN
         data['Ticker'] = ticker_symbol
         data['Name'] = info.get('longName', 'N/A')
-
-        if history.empty or not info:
-            data['Name'] = f"{ticker_symbol} (Failed to fetch info/history)"
-            return [data.get(col) for col in columns], pd.Series(dtype=float)
-        
         data['Sector'] = info.get('sector', 'Unknown')
         
-        # 3. EXTRACT COMMON DATA POINTS
         current_price = info.get('currentPrice', info.get('regularMarketPrice'))
         shares_outstanding = info.get('sharesOutstanding')
         market_cap = info.get('marketCap')
-        enterprise_value = info.get('enterpriseValue')
 
-        # Annual Financials
-        revenue_curr = get_value(financials, ['Total Revenue', 'TotalRevenue'])
-        gross_profit_curr = get_value(financials, ['Gross Profit', 'GrossProfit'])
-        net_income_curr = get_value(financials, ['Net Income', 'NetIncome'])
-        operating_income_curr = get_value(financials, ['Operating Income', 'OperatingIncome'])
-        ebit_curr = get_value(financials, ['EBIT', 'Ebit'])
-        interest_expense_curr = get_value(financials, ['Interest Expense', 'InterestExpense'])
-        cogs_curr = get_value(financials, ['Cost Of Revenue', 'CostOfRevenue'])
+        # Step 3: Pre-extract a wide range of financial data points (annual) for multiple years
+        # This centralizes data fetching and makes subsequent calculations cleaner.
+        # Year 0 is the most recent year, Year 1 is the year before, etc.
+        revenue = get_value(financials, ['Total Revenue', 'TotalRevenue']) or 0
+        gross_profit = get_value(financials, ['Gross Profit', 'GrossProfit']) or 0
+        net_income = get_value(financials, ['Net Income', 'NetIncome']) or 0
+        operating_income = get_value(financials, ['Operating Income', 'OperatingIncome']) or 0
+        interest_expense = get_value(financials, ['Interest Expense', 'InterestExpense']) or 0
+        ebit = get_value(financials, ['Ebit', 'EBIT']) or 0
+        total_assets = get_value(balancesheet, ['Total Assets', 'TotalAssets']) or 0
+        total_liabilities = get_value(balancesheet, ['Total Liabilities', 'TotalLiab']) or 0
+        intangibles = (get_value(balancesheet, ['Intangible Assets', 'IntangibleAssets']) or 0) + (get_value(balancesheet, ['Goodwill']) or 0)
+        total_equity = get_value(balancesheet, ['Total Stockholder Equity', 'TotalStockholderEquity']) or 0
+        current_assets = get_value(balancesheet, ['Total Current Assets', 'CurrentAssets']) or 0
+        current_liabilities = get_value(balancesheet, ['Total Current Liabilities', 'CurrentLiabilities']) or 0
+        inventory = get_value(balancesheet, ['Inventory']) or 0
+        cogs = get_value(financials, ['Cost Of Revenue', 'CostOfRevenue']) or 0
+        operating_cash_flow = get_value(cashflow, ['Operating Cash Flow', 'TotalCashFromOperatingActivities']) or 0
+        capex = get_value(cashflow, ['Capital Expenditure', 'CapitalExpenditures']) or 0
+        depreciation = get_value(cashflow, ['Depreciation And Amortization', 'Depreciation']) or 0
+        dividends_paid = get_value(cashflow, ['Dividends Paid', 'DividendsPaid']) or 0
+        buybacks = get_value(cashflow, ['Repurchase Of Capital Stock', 'RepurchaseOfStock']) or 0
+        fcf = operating_cash_flow + capex if pd.notna(operating_cash_flow) and pd.notna(capex) else np.nan
+        
+        # Historical values for growth calculations
+        revenue_y1 = get_value(financials, ['Total Revenue', 'TotalRevenue'], 1)
+        revenue_y3 = get_value(financials, ['Total Revenue', 'TotalRevenue'], 3)
+        total_assets_y1 = get_value(balancesheet, ['Total Assets', 'TotalAssets'], 1)
+        eps_y0 = get_value(financials, ['Diluted EPS'], 0)
+        eps_y3 = get_value(financials, ['Diluted EPS'], 3)
+        shares_y0 = get_value(balancesheet, ['Common Stock Shares Outstanding'], 0)
+        shares_y1 = get_value(balancesheet, ['Common Stock Shares Outstanding'], 1)
+        
+        # Step 4: Calculate Factors - Grouped by Category
+        
+        # --- A. Existing Core Factors (Recalculated with pre-fetched data for consistency) ---
+        data['Market_Cap'] = market_cap
+        data['Dividend_Yield'] = info.get('dividendYield', 0) * 100
+        data['PE_Ratio'] = info.get('trailingPE')
+        data['EPS_Diluted'] = info.get('trailingEps')
+        data['Insider_Ownership_Ratio'] = info.get('heldPercentInsiders', 0) * 100
+        data['Institutional_Ownership_Ratio'] = info.get('heldPercentInstitutions', 0) * 100
+        data['Audit_Risk'], data['Board_Risk'], data['Compensation_Risk'], data['Shareholder_Rights_Risk'], data['Overall_Risk'] = \
+            info.get('auditRisk',np.nan), info.get('boardRisk',np.nan), info.get('compensationRisk',np.nan), info.get('shareHolderRightsRisk',np.nan), info.get('overallRisk',np.nan)
 
-        # Annual Balance Sheet
-        total_assets_curr = get_value(balancesheet, ['Total Assets', 'TotalAssets'])
-        total_liabilities_curr = get_value(balancesheet, ['Total Liabilities', 'TotalLiab'])
-        total_equity_curr = get_value(balancesheet, ['Total Stockholder Equity', 'TotalStockholderEquity'])
-        current_assets_curr = get_value(balancesheet, ['Total Current Assets', 'CurrentAssets'])
-        current_liabilities_curr = get_value(balancesheet, ['Total Current Liabilities', 'CurrentLiabilities'])
-        inventory_curr = get_value(balancesheet, ['Inventory'])
-        receivables_curr = get_value(balancesheet, ['Net Receivables', 'Accounts Receivable'])
-        payables_curr = get_value(balancesheet, ['Accounts Payable', 'Payables'])
-        long_term_debt_curr = get_value(balancesheet, ['Long Term Debt', 'LongTermDebt'])
-        cash_curr = get_value(balancesheet, ['Cash And Cash Equivalents', 'CashAndCashEquivalents', 'Cash'])
-        retained_earnings_curr = get_value(balancesheet, ['Retained Earnings'])
-        intangibles_curr = (get_value(balancesheet, ['Intangible Assets', 'IntangibleAssets']) or 0) + (get_value(balancesheet, ['Goodwill']) or 0)
-
-        # Annual Cash Flow
-        operating_cash_flow_curr = get_value(cashflow, ['Operating Cash Flow', 'TotalCashFromOperatingActivities'])
-        capex_curr = get_value(cashflow, ['Capital Expenditure', 'CapitalExpenditures'])
-        depreciation_curr = get_value(cashflow, ['Depreciation And Amortization', 'Depreciation'])
-        dividends_paid_curr = get_value(cashflow, ['Dividends Paid', 'DividendsPaid'])
-        buybacks_curr = get_value(cashflow, ['Repurchase Of Capital Stock', 'RepurchaseOfStock'])
-        fcf_curr = (operating_cash_flow_curr or 0) + (capex_curr or 0)
-
-        # 4. CALCULATE ALL FACTORS
-
-        # --- Base Factors ---
-        data.update({
-            'Market_Cap': market_cap, 'Dividend_Yield': info.get('dividendYield', 0) * 100,
-            'PE_Ratio': info.get('trailingPE'), 'EPS_Diluted': info.get('trailingEps'),
-            'Insider_Ownership_Ratio': info.get('heldPercentInsiders', 0) * 100,
-            'Institutional_Ownership_Ratio': info.get('heldPercentInstitutions', 0) * 100,
-            'Audit_Risk': info.get('auditRisk'), 'Board_Risk': info.get('boardRisk'), 'Compensation_Risk': info.get('compensationRisk'),
-            'Shareholder_Rights_Risk': info.get('shareHolderRightsRisk'), 'Overall_Risk': info.get('overallRisk'),
-            'Current_Ratio': _safe_division(current_assets_curr, current_liabilities_curr),
-            'Quick_Ratio': _safe_division((current_assets_curr or 0) - (inventory_curr or 0), current_liabilities_curr),
-            'Debt_Ratio': _safe_division(total_liabilities_curr, total_assets_curr),
-            'Liabilities_to_Equity': _safe_division(total_liabilities_curr, total_equity_curr),
-            'Gross_Profit_Margin': _safe_division(gross_profit_curr, revenue_curr) * 100,
-            'Operating_Margin': _safe_division(operating_income_curr, revenue_curr) * 100,
-            'Net_Profit_Margin': _safe_division(net_income_curr, revenue_curr) * 100,
-            'ROA': _safe_division(net_income_curr, total_assets_curr) * 100,
-            'ROE': _safe_division(net_income_curr, total_equity_curr) * 100,
-            'PS_Ratio': _safe_division(market_cap, revenue_curr),
-            'FCF_Yield': _safe_division(fcf_curr, market_cap) * 100,
-            'Sales_Per_Share': _safe_division(revenue_curr, shares_outstanding),
-            'FCF_Per_Share': _safe_division(fcf_curr, shares_outstanding),
-            'Asset_Turnover': _safe_division(revenue_curr, total_assets_curr),
-            'CapEx_to_DepAmor': _safe_division(abs(capex_curr or 0), depreciation_curr),
-            'Dividends_to_FCF': _safe_division(abs(dividends_paid_curr or 0), fcf_curr),
-            'Interest_Coverage': _safe_division(ebit_curr, abs(interest_expense_curr or 0)),
-            'Inventory_Turnover': _safe_division(cogs_curr, inventory_curr),
-            'Share_Buyback_to_FCF': _safe_division(abs(buybacks_curr or 0), fcf_curr),
-            'Dividends_Plus_Buyback_to_FCF': _safe_division(abs(dividends_paid_curr or 0) + abs(buybacks_curr or 0), fcf_curr),
-            'Earnings_Yield': _safe_division(data['EPS_Diluted'], current_price) * 100,
-            'FCF_to_Net_Income': _safe_division(fcf_curr, net_income_curr),
-            'Tangible_Book_Value': (total_assets_curr or 0) - (intangibles_curr or 0) - (total_liabilities_curr or 0),
-            'Return_On_Tangible_Equity': _safe_division(net_income_curr, (total_assets_curr or 0) - (intangibles_curr or 0) - (total_liabilities_curr or 0)) * 100,
-            'Earnings_Growth_Rate_5y': info.get('earningsGrowth', np.nan) * 100,
-            'Revenue_Growth_Rate_5y': info.get('revenueGrowth', np.nan) * 100,
-            'Dividend_Payout_Ratio': info.get('payoutRatio'),
-            'Book_to_Market_Ratio': _safe_division(total_equity_curr, market_cap)
-        })
-        data['Earnings_Price_Ratio'] = data['Earnings_Yield'] / 100 if pd.notna(data['Earnings_Yield']) else np.nan
-        data['Piotroski_F-Score'] = calculate_piotroski_f_score(financials, balancesheet, cashflow, total_assets_curr, data['ROA'], net_income_curr)
-        nopat = (operating_income_curr or 0) * 0.75
-        invested_capital = (total_assets_curr or 0) - (current_liabilities_curr or 0)
+        data['Current_Ratio'] = _safe_division(current_assets, current_liabilities)
+        data['Quick_Ratio'] = _safe_division(current_assets - inventory, current_liabilities)
+        data['Debt_Ratio'] = _safe_division(total_liabilities, total_assets)
+        data['Liabilities_to_Equity'] = _safe_division(total_liabilities, total_equity)
+        data['Gross_Profit_Margin'] = _safe_division(gross_profit, revenue) * 100
+        data['Operating_Margin'] = _safe_division(operating_income, revenue) * 100
+        data['Net_Profit_Margin'] = _safe_division(net_income, revenue) * 100
+        data['ROA'] = _safe_division(net_income, total_assets) * 100
+        data['ROE'] = _safe_division(net_income, total_equity) * 100
+        data['PS_Ratio'] = _safe_division(market_cap, revenue)
+        data['FCF_Yield'] = _safe_division(fcf, market_cap) * 100
+        data['Sales_Per_Share'] = _safe_division(revenue, shares_outstanding)
+        data['FCF_Per_Share'] = _safe_division(fcf, shares_outstanding)
+        data['Asset_Turnover'] = _safe_division(revenue, total_assets)
+        data['CapEx_to_DepAmor'] = _safe_division(abs(capex), depreciation)
+        data['Dividends_to_FCF'] = _safe_division(abs(dividends_paid), fcf) if fcf > 0 else np.nan
+        data['Interest_Coverage'] = _safe_division(ebit, abs(interest_expense))
+        data['Inventory_Turnover'] = _safe_division(cogs, inventory)
+        data['Share_Buyback_to_FCF'] = _safe_division(abs(buybacks), fcf) if fcf > 0 else np.nan
+        data['Dividends_Plus_Buyback_to_FCF'] = _safe_division(abs(dividends_paid) + abs(buybacks), fcf) if fcf > 0 else np.nan
+        data['Earnings_Yield'] = _safe_division(data['EPS_Diluted'], current_price) * 100
+        data['FCF_to_Net_Income'] = _safe_division(fcf, net_income) if net_income > 0 else np.nan
+        data['Tangible_Book_Value'] = total_assets - intangibles - total_liabilities
+        data['Return_On_Tangible_Equity'] = _safe_division(net_income, data['Tangible_Book_Value']) * 100
+        data['Earnings_Growth_Rate_5y'] = info.get('earningsGrowth', np.nan) * 100
+        data['Revenue_Growth_Rate_5y'] = info.get('revenueGrowth', np.nan) * 100
+        data['Piotroski_F-Score'] = calculate_piotroski_f_score(financials, balancesheet, cashflow, total_assets, data['ROA'], net_income)
+        nopat = operating_income * (1 - 0.25) if pd.notna(operating_income) else np.nan
+        invested_capital = total_assets - current_liabilities if pd.notna(total_assets) and pd.notna(current_liabilities) else np.nan
         data['ROIC'] = _safe_division(nopat, invested_capital) * 100
-        data['Cash_ROIC'] = _safe_division(fcf_curr, invested_capital) * 100
+        data['Cash_ROIC'] = _safe_division(fcf, invested_capital) * 100
+        
+        # --- B. NEWLY IMPLEMENTED FACTORS ---
+        
+        # B.1. Size Factors
+        data['LogMktCap'] = np.log(market_cap) if market_cap and market_cap > 0 else np.nan
+        data['LogMktCapCubed'] = data['LogMktCap'] ** 3 if pd.notna(data['LogMktCap']) else np.nan
+        data['LogAssets'] = np.log(total_assets) if total_assets and total_assets > 0 else np.nan
 
-        # --- Institutional Factors ---
-        data.update({
-            'LogMktCap': np.log(market_cap) if pd.notna(market_cap) and market_cap > 0 else np.nan,
-            'LogAssets': np.log(total_assets_curr) if pd.notna(total_assets_curr) and total_assets_curr > 0 else np.nan,
-            'LogTTMSales': np.log(revenue_curr) if pd.notna(revenue_curr) and revenue_curr > 0 else np.nan,
-            'IndRel_TobinQ': _calculate_tobin_q(market_cap, total_assets_curr, total_liabilities_curr, current_liabilities_curr),
-            'ShareChg': calculate_growth(shares_outstanding, get_value(balancesheet, ['Common Stock Shares Outstanding'], 1)),
-            'SusGrwRate': _calculate_sustainable_growth_rate(data['ROE'], data['Dividend_Payout_Ratio']),
-            'AstGrwth': calculate_growth(total_assets_curr, get_value(balancesheet, ['Total Assets'], 1)),
-            'TotalAccruals': (net_income_curr or 0) - (operating_cash_flow_curr or 0),
-            'FinLev': _safe_division(total_assets_curr, total_equity_curr),
-            'BookLev': data['Liabilities_to_Equity'],
-            'Altman_ZScore': _calculate_altman_z_score(info, financials, balancesheet, current_price),
-            'LTDE': _safe_division(long_term_debt_curr, total_equity_curr),
-            'InvTurn': data['Inventory_Turnover'],
-            'InvToAsset': _safe_division(inventory_curr, total_assets_curr),
-            'RONA': _safe_division(net_income_curr, invested_capital) * 100,
-            'GPMargin': data['Gross_Profit_Margin'],
-            'EBITMargin': _safe_division(ebit_curr, revenue_curr) * 100,
-            'CashAst': _safe_division(cash_curr, total_assets_curr),
-            'CashRatio': _safe_division(cash_curr, current_liabilities_curr),
-            'CFAst': _safe_division(operating_cash_flow_curr, total_assets_curr),
-            'CFIC': data['Cash_ROIC'],
-            'CFROIC': data['Cash_ROIC'],
-            'MVEToTL': _safe_division(market_cap, total_liabilities_curr),
-            'SalesToInvCap': _safe_division(revenue_curr, invested_capital),
-            'RecTurn': _safe_division(revenue_curr, receivables_curr),
-            'OCFP': _safe_division(operating_cash_flow_curr, market_cap),
-            'OCFEV': _safe_division(operating_cash_flow_curr, enterprise_value),
-            'OCFRatio': _safe_division(operating_cash_flow_curr, revenue_curr),
-            'SP': _safe_division(revenue_curr, market_cap),
-            'EP': _safe_division(1, data['PE_Ratio']) if pd.notna(data['PE_Ratio']) else np.nan,
-            'AstP': _safe_division(total_assets_curr, market_cap),
-            'OEP': _safe_division(operating_income_curr, market_cap),
-            'CFEV': _safe_division(operating_cash_flow_curr, enterprise_value),
-            'EBITDAEV': _safe_division(info.get('ebitda'), enterprise_value),
-            'SEV': _safe_division(revenue_curr, enterprise_value),
-            'BP': data['Book_to_Market_Ratio'],
-        })
+        # B.2. Quality & Solvency Factors
+        data['Altman_ZScore'] = _calculate_altman_z_score(info, financials, balancesheet, current_price)
+        data['LTDE'] = _safe_division(long_term_debt_y0, total_equity)
+        data['CashRatio'] = _safe_division(cash_and_equiv_y0, current_liabilities)
+        payout_ratio = info.get('payoutRatio', np.nan)
+        data['SusGrwRate'] = (data['ROE'] / 100 * (1 - payout_ratio)) * 100 if pd.notna(data['ROE']) and pd.notna(payout_ratio) else np.nan
+        data['AstGrwth'] = _safe_division(total_assets - total_assets_y1, abs(total_assets_y1)) * 100
+        data['FinLev'] = _safe_division(total_assets, total_equity)
+        
+        # B.3. Growth & Stability Factors
+        data['3YAvgAnnSalesGrw'] = _calculate_annualized_growth(revenue, revenue_y3, 3)
+        data['3YAvgAnnEPSGrw'] = _calculate_annualized_growth(eps_y0, eps_y3, 3)
+        data['ShareChg'] = _safe_division(shares_y0 - shares_y1, abs(shares_y1)) * 100
 
-# --- Time-Series & Technicals (using `history` and `log_returns`) ---
+        # --- C. Time-Series, Price, Volume & Technical Indicators ---
+        log_returns = pd.Series(dtype=float) # Initialize
+        if not history.empty and 'Close' in history.columns and len(history) > 1:
+            log_returns = np.log(history['Close'] / history['Close'].shift(1)).dropna()
+            daily_returns = history['Close'].pct_change().dropna()
+            
+            # C.1. Your Original Advanced Metrics
+            data['GARCH_Vol'] = calculate_garch_volatility(log_returns)
+            data['AR_Coeff'] = calculate_ar_coefficient(log_returns)
+            data['Log_Log_Utility'] = calculate_log_log_utility(log_returns)
+            data['Log_Log_Sharpe'] = calculate_log_log_sharpe(log_returns)
+            data['Vol_Autocorr'] = calculate_volatility_autocorrelation(log_returns)
+            data['Stop_Loss_Impact'] = calculate_stop_loss_impact(log_returns)
+            hurst, _ = calculate_hurst_lo_modified(log_returns)
+            data['Hurst_Exponent'] = hurst
+            data['Trend'] = breakout(history['Close'])
+            if len(history) >= 90:
+                data['Dollar_Volume_90D'] = (history['Volume'] * history['Close']).rolling(90).mean().iloc[-1]
+            if len(history) > 252:
+                data['Momentum'] = (history['Close'].iloc[-1] / history['Close'].iloc[-252] - 1) * 100
+
+            # C.2. NEWLY ADDED Technical and Price-based Factors
+            data['14DayRSI'] = _calculate_rsi(history['Close'], window=14)
+            macd_line, _ = _calculate_macd(history['Close'], fast_window=12, slow_window=26)
+            data['10DMACD'] = macd_line # Note: this is a standard 12/26 MACD
+            stoch_k, _ = _calculate_stochastic_oscillator(history['High'], history['Low'], history['Close'], k_window=14)
+            data['20DStochastic'] = stoch_k # Note: this is a standard 14-period stochastic
+            
+            data['AnnVol1M'] = daily_returns.tail(21).std() * np.sqrt(BUSINESS_DAYS_IN_YEAR) * 100
+            data['AnnVol12M'] = daily_returns.tail(252).std() * np.sqrt(BUSINESS_DAYS_IN_YEAR) * 100
+            
+            if len(history) > 22: data['PM1M'] = (history['Close'].iloc[-1] / history['Close'].iloc[-22] - 1) * 100
+            if len(history) > 126: data['PM6M'] = (history['Close'].iloc[-1] / history['Close'].iloc[-126] - 1) * 100
+            if len(history) > 189: data['PM9M'] = (history['Close'].iloc[-1] / history['Close'].iloc[-189] - 1) * 100
+            if len(history) > 252: data['PM12M1M'] = (history['Close'].iloc[-22] / history['Close'].iloc[-252] - 1) * 100
+            
+            dollar_volume_series = history['Close'] * history['Volume']
+            data['Amihud'] = _calculate_amihud_illiquidity(dollar_volume_series, daily_returns)
+            
+            if len(history) >= 260:
+                data['PrcTo52WH'] = _safe_division(history['Close'].iloc[-1], history['Close'].tail(260).max())
+                data['PrcTo260DL'] = _safe_division(history['Close'].iloc[-1], history['Close'].tail(260).min())
+
+            # C.3. Beta and Relative Strength (Your Original Logic)
+            spy_hist = etf_histories.get('SPY')
+            if spy_hist is not None and not spy_hist.empty:
+                spy_returns = np.log(spy_hist['Close'] / spy_hist['Close'].shift(1)).dropna()
+                beta_data = calculate_regime_aware_betas(log_returns, spy_returns)
+                if isinstance(beta_data, dict):
+                    data['Beta_to_SPY'] = beta_data.get('conservative_beta')
+                    data['Beta_Down_Market'] = beta_data.get('down_beta')
+                    data['Beta_Up_Market'] = beta_data.get('up_beta')
+                    data['Beta60M'] = beta_data.get('conservative_beta') # Approximation
+            
+            rolling_correlations = {}
+            for etf, etf_history in etf_histories.items():
+                if etf_history is not None and not etf_history.empty:
+                    etf_returns = np.log(etf_history['Close'] / etf_history['Close'].shift(1)).dropna()
+                    common_idx = log_returns.index.intersection(etf_returns.index)
+                    if len(common_idx) > 90:
+                        corr = log_returns.loc[common_idx].corr(etf_returns.loc[common_idx]) if log_returns.loc[common_idx].std() > 1e-6 and etf_returns.loc[common_idx].std() > 1e-6 else 0.0
+                        if pd.notna(corr): rolling_correlations[etf] = corr
+            
+            if rolling_correlations:
+                best_factor_ticker = max(rolling_correlations, key=lambda k: abs(rolling_correlations.get(k, 0)))
+                data['Best_Factor'] = best_factor_ticker
+                data['Correlation_Score'] = rolling_correlations.get(best_factor_ticker)
+                best_etf_hist = etf_histories.get(best_factor_ticker)
+                if best_etf_hist is not None:
+                    common_idx_z = history.index.intersection(best_etf_hist.index)
+                    if len(common_idx_z) > 200:
+                        if not (best_etf_hist['Close'][common_idx_z] <= 0).any():
+                            relative_strength = history['Close'][common_idx_z] / best_etf_hist['Close'][common_idx_z]
+                            data['Relative_Z_Score'] = calculate_volatility_adjusted_z_score(relative_strength, ticker=ticker_symbol, sector=data['Sector'])
+        
+        # --- D. Final Calculations & Placeholders ---
         returns_perf = calculate_returns_cached(ticker_symbol, tuple([5, 10, 21, 63, 126, 252]))
         data.update({f"Return_{p}d": returns_perf.get(f"Return_{p}d") for p in [5, 10, 21, 63, 126, 252]})
-        
-        # --- START OF THE FIX ---
-        # Initialize log_returns as an empty Series first.
-        log_returns = pd.Series(dtype=float)
 
-        # Check if history is usable.
-        if not history.empty and 'Close' in history.columns:
-    
-            # 1. THE FIX: Filter out any non-positive prices instead of rejecting the whole series.
-            #    This prevents log(0) errors and is much more robust than the old `.all()` check.
-            price_series = history['Close'][history['Close'] > 0]
-
-            # 2. Proceed only if there are valid prices left after filtering.
-            if not price_series.empty:
-                log_returns = np.log(price_series / price_series.shift(1)).dropna()
-
-            # 3. All subsequent calculations are now inside a check for valid log_returns.
-            #    This ensures they only run if the return series was successfully created.
-            if not log_returns.empty:
-                data.update({
-                    'GARCH_Vol': calculate_garch_volatility(log_returns),
-                    'AR_Coeff': calculate_ar_coefficient(log_returns),
-                    'Hurst_Exponent': calculate_hurst_lo_modified(log_returns)[0],
-                    'Trend': breakout(history['Close']),
-                    'Dollar_Volume_90D': (history['Volume'] * history['Close']).rolling(90).mean().iloc[-1] if len(history) >= 90 else np.nan,
-                    'AnnVol1M': log_returns.tail(21).std() * np.sqrt(252) if len(log_returns) >= 21 else np.nan,
-                    'AnnVol12M': log_returns.tail(252).std() * np.sqrt(252) if len(log_returns) >= 252 else np.nan,
-                    '14DayRSI': _calculate_rsi(history['Close'], 14),
-                    '10DMACD': _calculate_macd(history['Close'], 10, 20, 5)[0],
-                    '20DStochastic': _calculate_stochastic_oscillator(history['High'], history['Low'], history['Close'], 20, 3)[0],
-                    'Amihud': _calculate_amihud_illiquidity(history['Volume'] * history['Close'], history['Close'].pct_change(), 252),
-                    '50To200PrcRatio': _safe_division(history['Close'].rolling(50).mean().iloc[-1], history['Close'].rolling(200).mean().iloc[-1]) if len(history) >= 200 else np.nan,
-                    'PrcTo52WH': _safe_division(current_price, history['High'].tail(252).max()) if len(history) >= 252 else np.nan
-                })
-                spy_hist = etf_histories.get('SPY')
-                if spy_hist is not None and not spy_hist.empty:
-                    spy_returns = np.log(spy_hist['Close'] / spy_hist['Close'].shift(1)).dropna()
-                    beta_data = calculate_regime_aware_betas(log_returns, spy_returns)
-                    if isinstance(beta_data, dict):
-                        data.update({
-                            'Beta_to_SPY': beta_data.get('conservative_beta'),
-                            'Beta_Down_Market': beta_data.get('down_beta'),
-                            'Beta_Up_Market': beta_data.get('up_beta')
-                        })
-                
-                rolling_correlations = {}
-                for etf, etf_history in etf_histories.items():
-                    if etf_history is not None and not etf_history.empty:
-                        etf_returns = np.log(etf_history['Close'] / etf_history['Close'].shift(1)).dropna()
-                        common_idx = log_returns.index.intersection(etf_returns.index)
-                        if len(common_idx) > 90:
-                            corr = log_returns.loc[common_idx].corr(etf_returns.loc[common_idx])
-                            if pd.notna(corr): rolling_correlations[etf] = corr
-                
-                if rolling_correlations:
-                    best_factor_ticker = max(rolling_correlations, key=lambda k: abs(rolling_correlations.get(k, 0)))
-                    data['Best_Factor'] = best_factor_ticker
-                    data['Correlation_Score'] = rolling_correlations.get(best_factor_ticker)
-                    data['Rolling_Market_Correlation'] = rolling_correlations.get('SPY', np.nan)
-                    best_etf_hist = etf_histories.get(best_factor_ticker)
-                    if best_etf_hist is not None and len(history.index.intersection(best_etf_hist.index)) > 200:
-                        # Use the already cleaned price_series for this calculation
-                        common_strength_idx = price_series.index.intersection(best_etf_hist['Close'].index)
-                        if len(common_strength_idx) > 200:
-                            relative_strength = price_series.loc[common_strength_idx] / best_etf_hist['Close'].loc[common_strength_idx]
-                            data['Relative_Z_Score'] = calculate_volatility_adjusted_z_score(relative_strength.dropna(), ticker=ticker_symbol, sector=data['Sector'])
-
-        # --- Final Derived & Style Factors ---
-        data['Momentum'] = data['Return_252d']
         data['Growth'] = data.get('Sales_Growth_YOY')
-        data['Q_Score'] = min(_safe_division(data.get('Quick_Ratio', 0), 5.0, 0.0), 1.0)
-        data['Coverage_Score'] = min(_safe_division(data.get('Interest_Coverage', 0), 10.0, 0.0), 1.0)
-        data['Value_Factor'] = min(_safe_division(1, ((data.get('PE_Ratio', 0) + data.get('PS_Ratio', 0)) / 2.0), 0.0), 1.0)
-        profit_metrics = [m for m in [data.get('ROE'), data.get('ROIC'), data.get('Net_Profit_Margin')] if pd.notna(m)]
-        data['Profitability_Factor'] = min(_safe_division(np.mean(profit_metrics), 100.0, 0.0), 1.0) if profit_metrics else 0.0
-        data['Carry'] = (data.get('Earnings_Yield', 0) + data.get('FCF_Yield', 0)) / 2.0
-        # --- RETURN FINAL DATA ---
+        data['Q_Score'] = min(pd.to_numeric(data.get('Quick_Ratio', 0), errors='coerce') / 5.0, 1.0) if pd.notna(data.get('Quick_Ratio')) and data.get('Quick_Ratio', 0) > 0 else 0.0
+        data['Coverage_Score'] = min(pd.to_numeric(data.get('Interest_Coverage', 0), errors='coerce') / 10.0, 1.0) if pd.notna(data.get('Interest_Coverage')) and data.get('Interest_Coverage', 0) > 0 else 0.0
+        
+        vision_score = 0
+        if data.get('Sector') == 'Technology' and pd.notna(net_income) and net_income < 0: vision_score += 5
+        if pd.notna(data.get('Sales_Growth_TTM')) and data.get('Sales_Growth_TTM') > 20: vision_score += 3
+        data['Vision'] = min(vision_score / 8.0, 1.0)
+        
+        pe_val, ps_val = data.get('PE_Ratio'), data.get('PS_Ratio')
+        if pd.notna(pe_val) and pd.notna(ps_val) and (pe_val + ps_val) > 0:
+            data['Value_Factor'] = min(1 / ((pe_val + ps_val) / 2.0), 1.0)
+        else: data['Value_Factor'] = 0.0
+
+        profit_metrics = [data.get('ROE'), data.get('ROIC'), data.get('Net_Profit_Margin')]
+        valid_profit_metrics = [m for m in profit_metrics if pd.notna(m)]
+        data['Profitability_Factor'] = min(np.mean(valid_profit_metrics) / 100.0, 1.0) if valid_profit_metrics else 0.0
+        
+        data['Carry'] = (pd.to_numeric(data.get('Earnings_Yield', 0), errors='coerce') + pd.to_numeric(data.get('FCF_Yield', 0), errors='coerce')) / 2.0
+        data['Earnings_Price_Ratio'] = data['Earnings_Yield'] / 100 if pd.notna(data.get('Earnings_Yield')) else np.nan
+        data['Book_to_Market_Ratio'] = _safe_division(total_equity, market_cap)
+
+        # Placeholders for factors that require post-processing or external (non-yfinance) data
+        data['IndRel_TobinQ'] = np.nan # TODO: Implement as post-processing step
+        data['ROEStddev20Q'] = np.nan # TODO: Implement using quarterly data history
+        data['EQ-style'], data['HG-style'], data['Sz-style'], data['AE-style'], data['PM-style'], data['Vol-style'] = np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
+        data['EPSEstDispFY1C'], data['EPSEstDispFY2C'], data['AdjEPSNumRevFY1C'], data['AdjEPSNumRevFY2C'] = np.nan, np.nan, np.nan, np.nan
+
+        # --- E. Finalize & Format Output ---
         result_list = [data.get(col) for col in columns]
         return result_list, log_returns
 
     except Exception as e:
         logging.error(f"Critical error processing {ticker_symbol}: {e}", exc_info=True)
-        # Create a placeholder row on error
         failed_data = {col: np.nan for col in columns}
         failed_data['Ticker'] = ticker_symbol
         failed_data['Name'] = f"{ticker_symbol} (Processing Error)"
         return [failed_data.get(col) for col in columns], pd.Series(dtype=float)
+@st.cache_data
 def process_tickers(_tickers, _etf_histories, _sector_etf_map):
-    results, returns_dict, failed_tickers = [], {}, []  # ← Initialize returns_dict as empty dict
-    
+    results, returns_dict, failed_tickers = [], {}, []
     with ThreadPoolExecutor(max_workers=10) as executor:
         future_to_ticker = {executor.submit(process_single_ticker, ticker, _etf_histories, _sector_etf_map): ticker for ticker in _tickers}
         for future in tqdm(as_completed(future_to_ticker), total=len(_tickers), desc="Processing All Ticker Metrics"):
             ticker = future_to_ticker[future]
             try:
                 result, returns = future.result()
-                
-                # Check if processing was successful
-                if result and pd.notna(result[1]):  # Check if 'Name' field is valid
+                # Check if 'Name' (index 1) is valid to determine if processing was successful
+                if result and pd.notna(result[1]): # Improved check for successful processing
                     results.append(result)
-                    # ↓↓↓ CRITICAL: Add returns to returns_dict if available
                     if returns is not None and not returns.empty:
                         returns_dict[ticker] = returns
-                    else:
-                        logging.warning(f"Ticker {ticker} has no returns data")
                 else:
                     failed_tickers.append(ticker)
-                    
             except Exception as e:
                 logging.error(f"Failed to process {ticker} in future: {e}")
                 failed_tickers.append(ticker)
-    
-    # Ensure we always return a DataFrame, even if empty
+            
     if not results:
-        results_df = pd.DataFrame(columns=columns)
-    else:
-        results_df = pd.DataFrame(results, columns=columns)
-        # Convert numeric columns
-        numeric_cols = [c for c in columns if c not in ['Ticker', 'Name', 'Sector', 'Best_Factor', 'Risk_Flag']]
-        results_df[numeric_cols] = results_df[numeric_cols].apply(pd.to_numeric, errors='coerce')
+        return pd.DataFrame(columns=columns), failed_tickers, {} # Explicitly returned empty dict for returns_dict
     
-    # ↓↓↓ CRITICAL: Always return returns_dict, even if empty
-    return results_df, failed_tickers, returns_dict
+    results_df = pd.DataFrame(results, columns=columns)
+    
+    numeric_cols = [c for c in columns if c not in ['Ticker', 'Name', 'Sector', 'Best_Factor', 'Risk_Flag']]
+    results_df[numeric_cols] = results_df[numeric_cols].apply(pd.to_numeric, errors='coerce')
+    
+    for col in results_df.select_dtypes(include=np.number).columns:
+        if results_df[col].isna().all():
+            results_df[col] = 0.0 # Fill entirely NaN columns with 0
+        else:
+            median_val = results_df[col].median()
+            results_df[col] = results_df[col].fillna(median_val) # Direct assignment
+
+        if results_df[col].var() < 1e-8: # Add small noise to constant columns
+            results_df[col] += np.random.normal(0, 0.01, len(results_df))
+    
+    return results_df.infer_objects(copy=False), failed_tickers, returns_dict
 @st.cache_data
 def run_factor_stability_analysis(_results_df, _all_possible_metrics, _reverse_metric_map):
     """
@@ -4035,7 +3919,7 @@ def display_stock_dashboard(ticker_symbol, results_df, returns_dict, etf_histori
                 st.metric("Hurst Exponent", f"{hurst_value:.3f}", delta=hurst_interpretation, delta_color="off")
             else:
                 st.metric("Hurst Exponent", "N/A")
-        # This part is correctly indented and assumed to be inside `col1`
+
         st.subheader("Daily Risk Range (ATR-based)")
         risk_low, risk_high, last_price, pct_change = get_daily_risk_range(daily_history)
         if not pd.isna(risk_low):
@@ -4051,44 +3935,37 @@ def display_stock_dashboard(ticker_symbol, results_df, returns_dict, etf_histori
 
     with col2:
         st.subheader(f"Actionable Peer Analysis (90d)")
-    
+        
         sort_by = st.radio(
             "Sort Peers By:",
             ('Pairs Score (Best Opportunities)', 'Correlation (Truest Peers)'),
             horizontal=True,
             label_visibility="collapsed"
         )
-    
+        
+        # --- KEY CHANGE: Dynamic Function Calls and Sorting ---
         if sort_by == 'Pairs Score (Best Opportunities)':
-            correlated_stocks_df = get_correlated_stocks(ticker_symbol, returns_dict, results_df, correlation_threshold=None)
-            final_df = correlated_stocks_df.sort_values('Pairs_Score', ascending=False).head(15)
+            # Call the function WITHOUT a threshold to search the whole market
+            # Added `returns_dict` to the function call as it's required for `get_correlated_stocks`
+            correlated_stocks_df = get_correlated_stocks(ticker_symbol, returns_dict, results_df, correlation_threshold=None) # Passed None to search whole market
+            # Sort the full results by the Pairs Score
+            final_df = correlated_stocks_df.sort_values('Pairs_Score', ascending=False).head(15) # Show top 15 opportunities
         else: # Sort by Correlation
+            # Call the function WITH a threshold to find only true peers
             correlated_stocks_df = get_correlated_stocks(ticker_symbol, returns_dict, results_df, correlation_threshold=0.6)
-            final_df = correlated_stocks_df.sort_values('Correlation', key=abs, ascending=False).head(15)
+            # Sort the filtered results by Correlation
+            final_df = correlated_stocks_df.sort_values('Correlation', key=abs, ascending=False).head(15) # Show top 15 peers
 
-        # This `if` checks if we have any data to show
         if not final_df.empty:
-            # All the following logic now correctly runs ONLY if final_df is NOT empty
-            
-            display_cols = [          # <--- MOVED INSIDE
+            display_cols = [
                 'Correlation', 
                 'Relative_Z_Score', 
                 'PE_Ratio', 
                 'Return_63d',
                 'Pairs_Score'
             ]
-
-            # Calculate the maximum score safely from the dataframe.
-            max_score = final_df['Pairs_Score'].max() # <--- MOVED INSIDE
-
-            # Check if the result is NaN and provide a safe default.
-            if pd.isna(max_score):                   # <--- MOVED INSIDE
-                progress_max_value = 3.0
-            else:
-                progress_max_value = max(max_score, 3.0)
-
-            # The dataframe display is now safely inside the check.
-            st.dataframe(                            # <--- MOVED INSIDE
+            
+            st.dataframe(
                 final_df[display_cols],
                 use_container_width=True,
                 column_config={
@@ -4101,14 +3978,13 @@ def display_stock_dashboard(ticker_symbol, results_df, returns_dict, etf_histori
                         help="Highlights potential pairs trades. = Correlation * |Z-Score Divergence|.",
                         format="%.2f",
                         min_value=0,
-                        # Use the safe, pre-calculated variable here.
-                        max_value=progress_max_value,
+                        max_value=max(final_df['Pairs_Score'].max(), 3),
                     ),
                 }
             )
-        # This `else` is now correctly paired with the `if not final_df.empty:`
         else:
             st.info(f"No significant peers found based on the selected criteria.")
+
 # --- NEW FUNCTION: apply_regime_weights(...) ---
 ################################################################################
 # SECTION 2: MAIN APPLICATION LOGIC (CORRECTED)
@@ -4151,7 +4027,7 @@ def main():
         "Hedging Conservatism (Lambda)", 0.1, 5.0, 0.5, 0.1
     )
 
-# --- Data Fetching and Initial Processing ---
+    # --- Data Fetching and Initial Processing ---
     with st.spinner("Fetching ETF and Macroeconomic histories..."):
         etf_histories = fetch_all_etf_histories(etf_list)
         macro_data = fetch_macro_data() # Fetch macro data, but it won't be used for weight adjustments now
@@ -4159,120 +4035,28 @@ def main():
 
     with st.spinner(f"Processing {len(tickers)} tickers..."):
         results_df, failed_tickers, returns_dict = process_tickers(tickers, etf_histories, sector_etf_map)
-
+        results_df = calculate_industry_relative_factors(results_df)
     if results_df.empty:
         st.error("Fatal Error: No tickers could be processed."); st.stop()
     st.success(f"Successfully processed {len(results_df)} tickers.")
     if failed_tickers:
         st.expander("Show Failed Tickers").warning(f"{len(failed_tickers)} tickers failed: {', '.join(failed_tickers)}")
 
-# --- CORRECTED ORDER OF OPERATIONS ---
-# 1. First, check if we have any returns data at all
-    if not returns_dict:
-        st.error("❌ CRITICAL ERROR: No returns data available. Cannot proceed with analysis.")
-        st.error("This usually means the data fetching failed for all tickers.")
-    
-    # Debug: Let's check what process_tickers actually returned
-        st.error("Debug: returns_dict is completely empty or None")
-    
-    # Try to create minimal test data as fallback
-        st.warning("Creating minimal test data as fallback...")
-        returns_dict = {}
-        dates = pd.date_range(end=datetime.now(), periods=100, freq='D')
-    
-    # Use the tickers from results_df if available
-        if not results_df.empty and 'Ticker' in results_df.columns:
-            test_tickers = results_df['Ticker'].head(5).tolist()
-            for ticker in test_tickers:
-            # Create simple random returns
-                returns = pd.Series(np.random.normal(0.001, 0.02, 100), index=dates)
-                returns_dict[ticker] = returns
-            st.info(f"Created test data for {len(returns_dict)} tickers")
-        else:
-            st.error("Cannot create test data - no tickers available")
-            st.stop()
+    # --- CORRECTED ORDER OF OPERATIONS ---
+    # 1. First, we must clean the raw returns.
+    with st.spinner("Applying Winsorization to clean return data..."):
+        winsorized_returns_dict = winsorize_returns(returns_dict, lookback_T=126, d_max=7.0)
+    st.success("Return data cleaned successfully.")
 
-# Debug: Check what's in returns_dict
-    valid_returns_count = sum(1 for returns in returns_dict.values() 
-                             if returns is not None and not returns.empty and len(returns) > 10)
-    st.info(f"Returns data: {len(returns_dict)} tickers total, {valid_returns_count} with sufficient data")
-
-# 2. Clean the raw returns (but only if we have valid data)
-    if valid_returns_count > 0:
-        with st.spinner("Applying Winsorization to clean return data..."):
-            winsorized_returns_dict = winsorize_returns(returns_dict, lookback_T=126, d_max=7.0)
-    
-    # If winsorization fails but we had original data, use original
-        if not winsorized_returns_dict:
-            st.warning("Winsorization returned empty but original data exists. Using original returns.")
-            winsorized_returns_dict = returns_dict
-        
-        if winsorized_returns_dict:
-            st.success(f"Return data cleaned successfully. Processed {len(winsorized_returns_dict)} tickers.")
-        else:
-            st.error("No returns data available after winsorization. Cannot proceed.")
-            st.stop()
-    else:
-        st.error("❌ No valid returns data available. All tickers have insufficient or empty return series.")
-        st.error("This could be due to:")
-        st.error("1. All tickers failing to fetch data")
-        st.error("2. Very short return series for all tickers") 
-        st.error("3. Network issues during data download")
-    
-    # Try to use whatever data we have, even if it's minimal
-        if returns_dict:
-            st.warning("Using available data despite limitations...")
-            winsorized_returns_dict = returns_dict
-        else:
-            st.error("No returns data available at all. Cannot proceed.")
-            st.stop()
-
-# 3. Now, with clean returns, we can generate advanced signals
+    # 2. Now, with clean returns, we can generate advanced signals.
     with st.spinner("Generating advanced signals (Carry, Mean Reversion)..."):
         results_df = calculate_relative_carry(results_df)
-    
-    # Check if we have returns data for normalized prices
-        if winsorized_returns_dict:
-            try:
-                normalized_prices = get_all_prices_and_vols(list(winsorized_returns_dict.keys()), winsorized_returns_dict)
-            
-                if not normalized_prices.empty:
-                    results_df = calculate_cs_mean_reversion(results_df, normalized_prices)
-                    st.success("CS Mean Reversion calculated successfully.")
-                else:
-                    st.warning("Normalized prices calculation returned empty. Skipping CS Mean Reversion.")
-                    results_df['CS_Mean_Reversion'] = np.nan
-            except Exception as e:
-                st.warning(f"Error calculating normalized prices: {e}. Skipping CS Mean Reversion.")
-                results_df['CS_Mean_Reversion'] = np.nan
-        else:
-            st.warning("No returns data available. Skipping normalized price and CS Mean Reversion calculations.")
-            results_df['CS_Mean_Reversion'] = np.nan
-        
-    st.success("Advanced signals generated.")
-# If winsorization fails, use the original returns
-    if not winsorized_returns_dict:
-        st.warning("Winsorization failed or returned empty. Using original returns for analysis.")
-        winsorized_returns_dict = returns_dict
-    
-    st.success(f"Return data cleaned successfully. Processed {len(winsorized_returns_dict)} tickers.")
-
-# 2. Now, with clean returns, we can generate advanced signals.
-    with st.spinner("Generating advanced signals (Carry, Mean Reversion)..."):
-        results_df = calculate_relative_carry(results_df)
-    
         if winsorized_returns_dict: # Check if winsorized_returns_dict is not empty
             normalized_prices = get_all_prices_and_vols(list(winsorized_returns_dict.keys()), winsorized_returns_dict)
-        
-            if not normalized_prices.empty:
-                results_df = calculate_cs_mean_reversion(results_df, normalized_prices)
-            else:
-                st.warning("Normalized prices calculation failed. Skipping CS Mean Reversion.")
-                results_df['CS_Mean_Reversion'] = np.nan
+            results_df = calculate_cs_mean_reversion(results_df, normalized_prices)
         else:
-            st.warning("No returns data available. Skipping normalized price and CS Mean Reversion calculations.")
-            results_df['CS_Mean_Reversion'] = np.nan
-        
+            st.warning("Winsorized returns dictionary is empty. Skipping normalized price and CS Mean Reversion calculations.")
+            results_df['CS_Mean_Reversion'] = np.nan # Ensure column exists if it was to be used
     st.success("Advanced signals generated.")
 
     # --- Automatic Factor Weighting ---
