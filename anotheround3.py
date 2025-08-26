@@ -1319,8 +1319,20 @@ def winsorize_returns(returns_dict, lookback_T=126, d_max=6.0):
     winsorized_dict = {}
     total_winsorized_points = 0
 
+    if not returns_dict:
+        logging.warning("Input returns_dict is empty. Returning empty winsorized_dict.")
+        return {}
+
     for ticker, log_returns in returns_dict.items():
-        if log_returns.empty or len(log_returns) < lookback_T:
+        if log_returns.empty:
+            logging.warning(f"Ticker {ticker} has empty log_returns series. Skipping.")
+            continue
+        if len(log_returns) < lookback_T:
+            logging.warning(f"Ticker {ticker} has insufficient data ({len(log_returns)} < {lookback_T}). Skipping.")
+            winsorized_dict[ticker] = log_returns
+            continue
+        if log_returns.isna().all():
+            logging.warning(f"Ticker {ticker} has all NaN log returns. Skipping.")
             winsorized_dict[ticker] = log_returns
             continue
 
@@ -1333,12 +1345,9 @@ def winsorize_returns(returns_dict, lookback_T=126, d_max=6.0):
         # Calculate the rolling median denominator from the formula
         rolling_median_denom = abs_log_returns.rolling(window=lookback_T, min_periods=20).median().shift(1)
         
-        
         # Avoid division by zero and fill NaNs robustly
         rolling_median_denom.replace(0, np.nan, inplace=True)
-        # FIX: Replaced deprecated .fillna(method=...) with .ffill()
         rolling_median_denom.ffill(inplace=True)
-        # Backfill any remaining NaNs at the beginning of the series
         rolling_median_denom.fillna(abs_log_returns.median(), inplace=True)
         
         # Calculate the d_it score for each point in time
@@ -1354,7 +1363,6 @@ def winsorize_returns(returns_dict, lookback_T=126, d_max=6.0):
             winsorized_returns_series = log_returns.copy()
             
             # For each outlier, calculate the capped value
-            # Capped |log(1+r)| = d_max * median(...)
             cap_value = d_max * rolling_median_denom[outliers_mask]
             
             # Preserve the original sign of the outlier return
@@ -1367,7 +1375,10 @@ def winsorize_returns(returns_dict, lookback_T=126, d_max=6.0):
         else:
             # No outliers, just use the original series
             winsorized_dict[ticker] = log_returns
-            
+    
+    if not winsorized_dict:
+        logging.warning("Winsorized_dict is empty. No tickers had sufficient data for winsorization.")
+    
     logging.info(f"Winsorization complete. Capped {total_winsorized_points} outlier data points across all tickers.")
     return winsorized_dict
 def display_deep_dive_data(ticker_symbol):
