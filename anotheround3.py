@@ -2318,25 +2318,66 @@ def set_weights_from_stability(stability_df, all_metrics, reverse_metric_map):
     return final_weights_dict, stability_df
 
 def check_multicollinearity(X, characteristics, vif_threshold=10):
-    if X.empty or X.shape[1] < 2: return characteristics
-    X_clean = X.copy().replace([np.inf, -np.inf], np.nan).fillna(X.median())
-    non_zero_var_cols = [col for col in X_clean.columns if X_clean[col].var() > 1e-8]
-    X_clean = X_clean[non_zero_var_cols]
-    characteristics = [c for c in characteristics if c in non_zero_var_cols]
-    if X_clean.shape[1] < 2: return characteristics
-    corr_matrix = X_clean.corr().abs()
+    """
+    Checks for multicollinearity and removes offending features.
+    This version is more robust against perfect multicollinearity.
+    """
+    if X.empty or X.shape[1] < 2:
+        return characteristics
+
+    # 1. Start with a clean slate
+    X_clean = X.copy().replace([np.inf, -np.inf], np.nan)
+    
+    # 2. Drop columns that are entirely NaN after cleaning
+    X_clean.dropna(axis=1, how='all', inplace=True)
+    
+    # 3. Fill remaining NaNs using the median
+    for col in X_clean.columns:
+        if X_clean[col].isnull().any():
+            X_clean[col].fillna(X_clean[col].median(), inplace=True)
+
+    # 4. Remove columns with zero or near-zero variance (constants)
+    # This is a key step to prevent VIF errors.
+    non_zero_var_cols = [col for col in X_clean.columns if X_clean[col].var() > 1e-9]
+    X_filtered = X_clean[non_zero_var_cols]
+    
+    if X_filtered.shape[1] < 2:
+        return X_filtered.columns.tolist()
+
+    # 5. Remove one of each pair of highly correlated features
+    corr_matrix = X_filtered.corr().abs()
     upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
-    to_drop = [column for column in upper.columns if any(upper[column] > 0.99)]
-    X_filtered = X_clean.drop(columns=to_drop)
-    characteristics_filtered = [c for c in characteristics if c not in to_drop]
-    if len(characteristics_filtered) < 2: return characteristics_filtered
-    try:
+    to_drop = [column for column in upper.columns if any(upper[column] > 0.98)] # Slightly lower threshold
+    X_filtered.drop(columns=to_drop, inplace=True)
+    
+    if X_filtered.shape[1] < 2:
+        return X_filtered.columns.tolist()
+
+    # 6. Iteratively calculate VIF and remove the worst offender until all are below the threshold.
+    # This is more robust than a single pass.
+    final_characteristics = X_filtered.columns.tolist()
+    while True:
         vif_data = pd.DataFrame()
-        vif_data["feature"] = X_filtered.columns
-        vif_data["VIF"] = [variance_inflation_factor(X_filtered.values, i) for i in range(len(X_filtered.columns))]
-        high_vif_features = vif_data[vif_data['VIF'] > vif_threshold]['feature'].tolist()
-        return [c for c in characteristics_filtered if c not in high_vif_features]
-    except Exception: return characteristics_filtered
+        try:
+            vif_data["feature"] = X_filtered.columns
+            vif_data["VIF"] = [variance_inflation_factor(X_filtered.values, i) for i in range(X_filtered.shape[1])]
+        except Exception as e:
+            logging.error(f"Error during VIF calculation: {e}. Returning current set of features.")
+            return final_characteristics
+        
+        max_vif = vif_data['VIF'].max()
+        if max_vif < vif_threshold:
+            break
+        
+        # Remove the feature with the highest VIF and repeat
+        feature_to_remove = vif_data.sort_values('VIF', ascending=False)['feature'].iloc[0]
+        X_filtered.drop(columns=[feature_to_remove], inplace=True)
+        final_characteristics.remove(feature_to_remove)
+        
+        if X_filtered.shape[1] < 2:
+            break
+            
+    return final_characteristics
 
 def calculate_portfolio_factor_correlations(weighted_df, etf_histories, period="3y", min_days=240):
     """
@@ -2861,7 +2902,6 @@ def process_tickers(_tickers, _etf_histories, _sector_etf_map):
     results, returns_dict, failed_tickers = [], {}, []
     
     # --- CORE FIX: Initialize returns_dict with all tickers ---
-    # This guarantees the dictionary will have all keys, even if values are empty.
     for ticker in _tickers:
         returns_dict[ticker] = pd.Series(dtype=float)
 
@@ -2872,10 +2912,8 @@ def process_tickers(_tickers, _etf_histories, _sector_etf_map):
             try:
                 result, returns = future.result()
                 
-                # Check if 'Name' (index 1) is valid to determine if processing was successful
                 if result and pd.notna(result[1]): 
                     results.append(result)
-                    # If returns are valid (not None and not empty), update the dictionary
                     if returns is not None and not returns.empty:
                         returns_dict[ticker] = returns
                 else:
@@ -2885,7 +2923,6 @@ def process_tickers(_tickers, _etf_histories, _sector_etf_map):
                 failed_tickers.append(ticker)
             
     if not results:
-        # returns_dict will still contain all tickers with empty series, preventing a crash.
         return pd.DataFrame(columns=columns), failed_tickers, returns_dict 
     
     results_df = pd.DataFrame(results, columns=columns)
@@ -2903,8 +2940,12 @@ def process_tickers(_tickers, _etf_histories, _sector_etf_map):
         if results_df[col].var() < 1e-8:
             results_df[col] += np.random.normal(0, 0.01, len(results_df))
     
-    # returns_dict will now contain successful returns and empty Series for failures.
-    return results_df.infer_objects(copy=False), failed_tickers, returns_dict
+    # --- DEFRAGMENTATION FIX ---
+    # Create a clean, non-fragmented copy before returning.
+    # The .infer_objects() call is a good practice to ensure optimal data types.
+    defragmented_df = results_df.infer_objects().copy()
+    
+    return defragmented_df, failed_tickers, returns_dict
 @st.cache_data
 def run_factor_stability_analysis(_results_df, _all_possible_metrics, _reverse_metric_map):
     """
