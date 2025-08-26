@@ -359,6 +359,51 @@ default_weights = {
 ################################################################################
 # SECTION 1: ALL FUNCTION DEFINITIONS
 ################################################################################
+@st.cache_data
+def filter_tickers_by_history(_tickers, min_years=5):
+    """
+    Filters a list of tickers robustly by performing a single bulk data download.
+    This is much more efficient and reliable than individual API calls.
+    """
+    if not _tickers:
+        return []
+
+    st.write(f"Pre-filtering {len(_tickers)} tickers for at least {min_years} years of history...")
+    
+    # 1. Determine the exact start date we need to check against.
+    # We fetch data starting from this date. If a stock has data on this date,
+    # it means its history is at least the required length.
+    start_date_check = (datetime.now() - pd.DateOffset(years=min_years)).strftime('%Y-%m-%d')
+    
+    # 2. Perform ONE single, efficient bulk download for all tickers.
+    # We only need one data point per day, so 'Close' is sufficient.
+    try:
+        hist_data = yf.download(
+            _tickers, 
+            start=start_date_check, 
+            end=(pd.to_datetime(start_date_check) + pd.DateOffset(days=5)).strftime('%Y-%m-%d'), # Fetch a small window
+            progress=False
+        )['Close']
+        
+        if hist_data.empty:
+            st.warning("Could not download any historical data for pre-filtering. The API might be down. Skipping filter.")
+            return _tickers # Fallback to the original list
+
+    except Exception as e:
+        st.error(f"An error occurred during the bulk data download for filtering: {e}")
+        return _tickers # Fallback to prevent crashing
+
+    # 3. Process the single downloaded DataFrame in memory (this is extremely fast).
+    valid_tickers = []
+    for ticker in _tickers:
+        if ticker in hist_data.columns:
+            # A ticker is valid if it has non-NaN data on or before our start date check.
+            # .first_valid_index() finds the first day the stock traded in our downloaded window.
+            first_trade_date = hist_data[ticker].first_valid_index()
+            if first_trade_date is not None and first_trade_date <= pd.to_datetime(start_date_check):
+                valid_tickers.append(ticker)
+    
+    return sorted(valid_tickers)
 def _check_single_ticker_history(ticker, min_years):
     """
     Worker function for the thread pool. Fetches history for a single ticker
@@ -4325,6 +4370,8 @@ def main():
         "Hedging Conservatism (Lambda)", 0.1, 5.0, 0.5, 0.1
     )
 
+
+    # --- Data Fetching and Initial Processing ---
     # --- UI Controls for Filtering ---
     st.sidebar.subheader("Data Pre-filtering")
     min_history_years = st.sidebar.slider(
@@ -4341,21 +4388,19 @@ def main():
         macro_data = fetch_macro_data()
     st.success("All historical data loaded.")
 
-    # --- NEW: Pre-filter tickers based on historical data length ---
-    # `tickers` is the original, long list defined at the top of your script.
+    # --- NEW: Pre-filter tickers using the ROBUST bulk-download method ---
     filtered_tickers = filter_tickers_by_history(tickers, min_years=min_history_years)
     
     st.info(f"**Ticker Filter Applied:** Found **{len(filtered_tickers)}** out of {len(tickers)} initial stocks with at least **{min_history_years}** years of data.")
 
     # Check if any tickers remain after filtering
     if not filtered_tickers:
-        st.error("No tickers met the minimum history requirement. Please select a shorter history duration from the sidebar and re-run.")
+        st.error("No tickers met the minimum history requirement. Please select a shorter history duration from the sidebar.")
         st.stop()
 
     # Now, process ONLY the valid, pre-filtered tickers.
     with st.spinner(f"Processing {len(filtered_tickers)} valid tickers... This may take a moment."):
         results_df, failed_tickers, returns_dict = process_tickers(filtered_tickers, etf_histories, sector_etf_map)
-
     # --- The rest of your code from this point on remains the same ---
     # It will now operate on a smaller, more reliable set of data.
 
