@@ -2826,7 +2826,7 @@ def process_single_ticker(ticker_symbol, etf_histories, sector_etf_map):
         returns_perf = calculate_returns_cached(ticker_symbol, tuple([5, 10, 21, 63, 126, 252]))
         data.update({f"Return_{p}d": returns_perf.get(f"Return_{p}d") for p in [5, 10, 21, 63, 126, 252]})
         
-        # FIX: PROPERLY HANDLE LOG RETURNS CALCULATION
+        # FIXED INDENTATION: Properly handle log returns calculation
         log_returns = pd.Series(dtype=float)
         if not history.empty and 'Close' in history.columns and (history['Close'] > 0).all():
             # Calculate log returns properly
@@ -2888,10 +2888,6 @@ def process_single_ticker(ticker_symbol, etf_histories, sector_etf_map):
         profit_metrics = [m for m in [data.get('ROE'), data.get('ROIC'), data.get('Net_Profit_Margin')] if pd.notna(m)]
         data['Profitability_Factor'] = min(_safe_division(np.mean(profit_metrics), 100.0, 0.0), 1.0) if profit_metrics else 0.0
         data['Carry'] = (data.get('Earnings_Yield', 0) + data.get('FCF_Yield', 0)) / 2.0
-                log_returns = pd.Series(dtype=float) # Initialized empty Series
-        if not history.empty and 'Close' in history.columns:
-            log_returns = np.log(history['Close'] / history['Close'].shift(1)).dropna() # FIX: fill_method=None is implicit here
-            if not log_returns.empty:
         # --- RETURN FINAL DATA ---
         result_list = [data.get(col) for col in columns]
         return result_list, log_returns
@@ -2903,45 +2899,42 @@ def process_single_ticker(ticker_symbol, etf_histories, sector_etf_map):
         failed_data['Ticker'] = ticker_symbol
         failed_data['Name'] = f"{ticker_symbol} (Processing Error)"
         return [failed_data.get(col) for col in columns], pd.Series(dtype=float)
-@st.cache_data
 def process_tickers(_tickers, _etf_histories, _sector_etf_map):
-    results, returns_dict, failed_tickers = [], {}, []
+    results, returns_dict, failed_tickers = [], {}, []  # ← Initialize returns_dict as empty dict
+    
     with ThreadPoolExecutor(max_workers=10) as executor:
         future_to_ticker = {executor.submit(process_single_ticker, ticker, _etf_histories, _sector_etf_map): ticker for ticker in _tickers}
         for future in tqdm(as_completed(future_to_ticker), total=len(_tickers), desc="Processing All Ticker Metrics"):
             ticker = future_to_ticker[future]
             try:
                 result, returns = future.result()
-                # Check if 'Name' (index 1) is valid to determine if processing was successful
-                if result and pd.notna(result[1]): # Improved check for successful processing
+                
+                # Check if processing was successful
+                if result and pd.notna(result[1]):  # Check if 'Name' field is valid
                     results.append(result)
+                    # ↓↓↓ CRITICAL: Add returns to returns_dict if available
                     if returns is not None and not returns.empty:
                         returns_dict[ticker] = returns
+                    else:
+                        logging.warning(f"Ticker {ticker} has no returns data")
                 else:
                     failed_tickers.append(ticker)
+                    
             except Exception as e:
                 logging.error(f"Failed to process {ticker} in future: {e}")
                 failed_tickers.append(ticker)
-            
+    
+    # Ensure we always return a DataFrame, even if empty
     if not results:
-        return pd.DataFrame(columns=columns), failed_tickers, {} # Explicitly returned empty dict for returns_dict
+        results_df = pd.DataFrame(columns=columns)
+    else:
+        results_df = pd.DataFrame(results, columns=columns)
+        # Convert numeric columns
+        numeric_cols = [c for c in columns if c not in ['Ticker', 'Name', 'Sector', 'Best_Factor', 'Risk_Flag']]
+        results_df[numeric_cols] = results_df[numeric_cols].apply(pd.to_numeric, errors='coerce')
     
-    results_df = pd.DataFrame(results, columns=columns)
-    
-    numeric_cols = [c for c in columns if c not in ['Ticker', 'Name', 'Sector', 'Best_Factor', 'Risk_Flag']]
-    results_df[numeric_cols] = results_df[numeric_cols].apply(pd.to_numeric, errors='coerce')
-    
-    for col in results_df.select_dtypes(include=np.number).columns:
-        if results_df[col].isna().all():
-            results_df[col] = 0.0 # Fill entirely NaN columns with 0
-        else:
-            median_val = results_df[col].median()
-            results_df[col] = results_df[col].fillna(median_val) # Direct assignment
-
-        if results_df[col].var() < 1e-8: # Add small noise to constant columns
-            results_df[col] += np.random.normal(0, 0.01, len(results_df))
-    
-    return results_df.infer_objects(copy=False), failed_tickers, returns_dict
+    # ↓↓↓ CRITICAL: Always return returns_dict, even if empty
+    return results_df, failed_tickers, returns_dict
 @st.cache_data
 def run_factor_stability_analysis(_results_df, _all_possible_metrics, _reverse_metric_map):
     """
