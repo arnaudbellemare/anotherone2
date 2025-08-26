@@ -1,1 +1,22 @@
+# --- Core App & Data ---
+streamlit
+pandas
+numpy
+yfinance
+pandas-datareader
+tqdm
+requests-cache
 
+# --- Scientific, Statistical & Time Series ---
+scipy
+statsmodels
+scikit-learn
+arch
+hmmlearn
+tenacity
+
+# --- Optimization ---
+cvxpy
+
+# --- Plotting ---
+plotly
