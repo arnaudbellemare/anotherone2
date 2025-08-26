@@ -262,7 +262,7 @@ METRIC_NAME_MAP = {
     'RskAdjRS': 'Risk-Adjusted Relative Strength', '130DMinRtn': '130-Day Minimum Return', 'HL1M': 'High-Low Range (1M)', 'Chg1YAmihud': '1Y Change in Amihud Illiquidity',
     '4To52WPrcOsc': '4-to-52 Week Price Oscillator', 'HL52W': 'High-Low Range (52W)', 'Amihud': 'Amihud Illiquidity', 'Vol-style': 'Volatility Style Factor'
 }
-
+REVERSE_METRIC_NAME_MAP = {v: k for k, v in METRIC_NAME_MAP.items()}
 # --- Generic mapping for any unmapped new factors ---
 new_factor_list = [f for f in columns if f not in METRIC_NAME_MAP and f not in ["Ticker", "Name", "Sector", "Best_Factor", "Risk_Flag"]]
 for factor in new_factor_list:
