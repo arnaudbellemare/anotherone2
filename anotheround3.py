@@ -1409,7 +1409,7 @@ def fetch_all_etf_histories(_etf_list, period="3y"):
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 def fetch_ticker_data(ticker_symbol):
     ticker = yf.Ticker(ticker_symbol)
-    history = ticker.history(period="7y", auto_adjust=True, interval="1d").tz_localize(None)
+    history = ticker.history(period="3y", auto_adjust=True, interval="1d").tz_localize(None)
     info = ticker.info
     financials = ticker.financials
     balancesheet = ticker.balance_sheet
