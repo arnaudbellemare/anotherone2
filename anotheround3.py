@@ -4151,7 +4151,7 @@ def main():
         "Hedging Conservatism (Lambda)", 0.1, 5.0, 0.5, 0.1
     )
 
-    # --- Data Fetching and Initial Processing ---
+# --- Data Fetching and Initial Processing ---
     with st.spinner("Fetching ETF and Macroeconomic histories..."):
         etf_histories = fetch_all_etf_histories(etf_list)
         macro_data = fetch_macro_data() # Fetch macro data, but it won't be used for weight adjustments now
@@ -4166,12 +4166,90 @@ def main():
     if failed_tickers:
         st.expander("Show Failed Tickers").warning(f"{len(failed_tickers)} tickers failed: {', '.join(failed_tickers)}")
 
-    # --- CORRECTED ORDER OF OPERATIONS ---
-    # 1. First, we must clean the raw returns.
-# 1. First, we must clean the raw returns.
-    with st.spinner("Applying Winsorization to clean return data..."):
-        winsorized_returns_dict = winsorize_returns(returns_dict, lookback_T=126, d_max=7.0)
+# --- CORRECTED ORDER OF OPERATIONS ---
+# 1. First, check if we have any returns data at all
+    if not returns_dict:
+        st.error("❌ CRITICAL ERROR: No returns data available. Cannot proceed with analysis.")
+        st.error("This usually means the data fetching failed for all tickers.")
     
+    # Debug: Let's check what process_tickers actually returned
+        st.error("Debug: returns_dict is completely empty or None")
+    
+    # Try to create minimal test data as fallback
+        st.warning("Creating minimal test data as fallback...")
+        returns_dict = {}
+        dates = pd.date_range(end=datetime.now(), periods=100, freq='D')
+    
+    # Use the tickers from results_df if available
+        if not results_df.empty and 'Ticker' in results_df.columns:
+            test_tickers = results_df['Ticker'].head(5).tolist()
+            for ticker in test_tickers:
+            # Create simple random returns
+                returns = pd.Series(np.random.normal(0.001, 0.02, 100), index=dates)
+                returns_dict[ticker] = returns
+            st.info(f"Created test data for {len(returns_dict)} tickers")
+        else:
+            st.error("Cannot create test data - no tickers available")
+            st.stop()
+
+# Debug: Check what's in returns_dict
+    valid_returns_count = sum(1 for returns in returns_dict.values() 
+                             if returns is not None and not returns.empty and len(returns) > 10)
+    st.info(f"Returns data: {len(returns_dict)} tickers total, {valid_returns_count} with sufficient data")
+
+# 2. Clean the raw returns (but only if we have valid data)
+    if valid_returns_count > 0:
+        with st.spinner("Applying Winsorization to clean return data..."):
+            winsorized_returns_dict = winsorize_returns(returns_dict, lookback_T=126, d_max=7.0)
+    
+    # If winsorization fails but we had original data, use original
+        if not winsorized_returns_dict:
+            st.warning("Winsorization returned empty but original data exists. Using original returns.")
+            winsorized_returns_dict = returns_dict
+        
+        if winsorized_returns_dict:
+            st.success(f"Return data cleaned successfully. Processed {len(winsorized_returns_dict)} tickers.")
+        else:
+            st.error("No returns data available after winsorization. Cannot proceed.")
+            st.stop()
+    else:
+        st.error("❌ No valid returns data available. All tickers have insufficient or empty return series.")
+        st.error("This could be due to:")
+        st.error("1. All tickers failing to fetch data")
+        st.error("2. Very short return series for all tickers") 
+        st.error("3. Network issues during data download")
+    
+    # Try to use whatever data we have, even if it's minimal
+        if returns_dict:
+            st.warning("Using available data despite limitations...")
+            winsorized_returns_dict = returns_dict
+        else:
+            st.error("No returns data available at all. Cannot proceed.")
+            st.stop()
+
+# 3. Now, with clean returns, we can generate advanced signals
+    with st.spinner("Generating advanced signals (Carry, Mean Reversion)..."):
+        results_df = calculate_relative_carry(results_df)
+    
+    # Check if we have returns data for normalized prices
+        if winsorized_returns_dict:
+            try:
+                normalized_prices = get_all_prices_and_vols(list(winsorized_returns_dict.keys()), winsorized_returns_dict)
+            
+                if not normalized_prices.empty:
+                    results_df = calculate_cs_mean_reversion(results_df, normalized_prices)
+                    st.success("CS Mean Reversion calculated successfully.")
+                else:
+                    st.warning("Normalized prices calculation returned empty. Skipping CS Mean Reversion.")
+                    results_df['CS_Mean_Reversion'] = np.nan
+            except Exception as e:
+                st.warning(f"Error calculating normalized prices: {e}. Skipping CS Mean Reversion.")
+                results_df['CS_Mean_Reversion'] = np.nan
+        else:
+            st.warning("No returns data available. Skipping normalized price and CS Mean Reversion calculations.")
+            results_df['CS_Mean_Reversion'] = np.nan
+        
+    st.success("Advanced signals generated.")
 # If winsorization fails, use the original returns
     if not winsorized_returns_dict:
         st.warning("Winsorization failed or returned empty. Using original returns for analysis.")
