@@ -359,7 +359,61 @@ default_weights = {
 ################################################################################
 # SECTION 1: ALL FUNCTION DEFINITIONS
 ################################################################################
+def _check_single_ticker_history(ticker, min_years):
+    """
+    Worker function for the thread pool. Fetches history for a single ticker
+    and checks if it meets the minimum year requirement.
+    Returns the ticker if valid, otherwise None.
+    """
+    try:
+        # We only need the start and end date, so a short period fetch is fine if we can get the 'firstTradeDate'
+        # However, fetching 'max' is the most reliable way to get the true start date.
+        stock = yf.Ticker(ticker)
+        hist = stock.history(period="max", auto_adjust=True, progress=False)
+        if not hist.empty:
+            # Calculate the duration in years
+            duration_days = (hist.index[-1] - hist.index[0]).days
+            if (duration_days / 365.25) >= min_years:
+                return ticker
+    except Exception as e:
+        # Silently fail for individual tickers to not stop the whole process
+        # logging.warning(f"Could not check history for {ticker}: {e}")
+        pass
+    return None
 
+@st.cache_data
+def filter_tickers_by_history(_tickers, min_years=5):
+    """
+    Filters a list of tickers to include only those with a minimum number of years of historical data.
+    Uses multi-threading for speed and displays a progress bar in Streamlit.
+    
+    Args:
+        _tickers (list): The initial list of ticker symbols.
+        min_years (int): The minimum number of years of data required.
+
+    Returns:
+        list: A new, filtered list of ticker symbols.
+    """
+    st.write(f"Pre-filtering {len(_tickers)} tickers for at least {min_years} years of history...")
+    valid_tickers = []
+    
+    progress_text = "Filtering tickers by history length. Please wait."
+    my_bar = st.progress(0, text=progress_text)
+    
+    with ThreadPoolExecutor(max_workers=20) as executor:
+        future_to_ticker = {executor.submit(_check_single_ticker_history, ticker, min_years): ticker for ticker in _tickers}
+        
+        total_futures = len(future_to_ticker)
+        for i, future in enumerate(as_completed(future_to_ticker)):
+            result = future.result()
+            if result:
+                valid_tickers.append(result)
+            
+            # Update progress bar
+            my_bar.progress((i + 1) / total_futures, text=progress_text)
+
+    my_bar.empty() # Clear the progress bar after completion
+    return sorted(valid_tickers) # Return a sorted list for consistency
 # --- Helper Functions ---
 def calculate_growth(current, previous):
     if pd.isna(current) or pd.isna(previous) or previous == 0: return np.nan
@@ -4271,69 +4325,80 @@ def main():
         "Hedging Conservatism (Lambda)", 0.1, 5.0, 0.5, 0.1
     )
 
+    # --- UI Controls for Filtering ---
+    st.sidebar.subheader("Data Pre-filtering")
+    min_history_years = st.sidebar.slider(
+        "Minimum Years of Stock History Required", 
+        min_value=1, 
+        max_value=10, 
+        value=5, # Default to 5 years
+        help="Filters the initial ticker list to only include stocks with at least this many years of price history. Speeds up analysis."
+    )
+
     # --- Data Fetching and Initial Processing ---
     with st.spinner("Fetching ETF and Macroeconomic histories..."):
         etf_histories = fetch_all_etf_histories(etf_list)
         macro_data = fetch_macro_data()
     st.success("All historical data loaded.")
 
-    with st.spinner(f"Processing {len(tickers)} tickers... This may take a moment."):
-        # This function calculates the ABSOLUTE value for all base and institutional factors.
-        results_df, failed_tickers, returns_dict = process_tickers(tickers, etf_histories, sector_etf_map)
+    # --- NEW: Pre-filter tickers based on historical data length ---
+    # `tickers` is the original, long list defined at the top of your script.
+    filtered_tickers = filter_tickers_by_history(tickers, min_years=min_history_years)
+    
+    st.info(f"**Ticker Filter Applied:** Found **{len(filtered_tickers)}** out of {len(tickers)} initial stocks with at least **{min_history_years}** years of data.")
+
+    # Check if any tickers remain after filtering
+    if not filtered_tickers:
+        st.error("No tickers met the minimum history requirement. Please select a shorter history duration from the sidebar and re-run.")
+        st.stop()
+
+    # Now, process ONLY the valid, pre-filtered tickers.
+    with st.spinner(f"Processing {len(filtered_tickers)} valid tickers... This may take a moment."):
+        results_df, failed_tickers, returns_dict = process_tickers(filtered_tickers, etf_histories, sector_etf_map)
+
+    # --- The rest of your code from this point on remains the same ---
+    # It will now operate on a smaller, more reliable set of data.
 
     if results_df.empty:
-        st.error("Fatal Error: No tickers could be processed. Please check ticker list and network connection.")
+        st.error("Fatal Error: No tickers could be processed after filtering. Please check the remaining tickers and network connection.")
         st.stop()
     st.success(f"Successfully processed {len(results_df)} tickers.")
     if failed_tickers:
         with st.expander("Show Failed Tickers"):
             st.warning(f"{len(failed_tickers)} tickers failed to process: {', '.join(failed_tickers)}")
 
+    if not returns_dict:
+        st.error("Fatal Error: Could not generate historical return data for any of the processed tickers.")
+        st.stop()
+
     # --- Post-Processing for Relative Institutional Factors ---
-    # This is the new, crucial step. We must perform this before calculating signals that rely on final factor values.
-    with st.spinner("Calculating industry-relative and historical-relative factors..."):
-        # Group by sector to calculate industry medians for all relevant factors at once.
-        # We exclude non-numeric columns and the 'Sector' column itself.
+    with st.spinner("Calculating industry-relative factors..."):
         numeric_cols = results_df.select_dtypes(include=np.number).columns.tolist()
         if 'Sector' in results_df.columns and not results_df['Sector'].isnull().all():
             sector_medians = results_df.groupby('Sector')[numeric_cols].transform('median')
-
-            # Now, calculate the true industry-relative value for each factor.
-            # The signal is often the stock's value minus the industry median.
             for col in results_df.columns:
                 if col.startswith('IndRel_'):
-                    # Find the base factor name (e.g., 'IndRel_ROE' -> 'ROE')
                     base_factor = col.replace('IndRel_', '')
                     if base_factor in sector_medians.columns:
                         results_df[col] = results_df[base_factor] - sector_medians[base_factor]
         else:
-            st.warning("No 'Sector' data available to calculate industry-relative factors. These factors will be NaN.")
-
-
-        # The `calculate_relative_carry` function also performs a sector-relative calculation,
-        # so it logically fits within this post-processing block.
+            st.warning("No 'Sector' data to calculate industry-relative factors.")
         results_df = calculate_relative_carry(results_df)
     st.success("Relative factors calculated successfully.")
 
-
     # --- Data Cleaning and Advanced Signal Generation ---
-    # This order is correct: we clean the raw returns before using them for signals.
     with st.spinner("Applying Winsorization to clean outlier return data..."):
-        # Winsorization is applied to the raw log-returns from `process_tickers`.
         winsorized_returns_dict = winsorize_returns(returns_dict, lookback_T=126, d_max=7.0)
     st.success("Return data cleaned successfully.")
 
-    with st.spinner("Generating advanced time-series signals (e.g., Mean Reversion)..."):
-        # These advanced signals are calculated *after* all fundamental data is processed and returns are cleaned.
+    with st.spinner("Generating advanced time-series signals..."):
         if winsorized_returns_dict:
-            # Volatility-normalized prices are required for the mean reversion signal.
             normalized_prices = get_all_prices_and_vols(list(winsorized_returns_dict.keys()), winsorized_returns_dict)
-            # Calculate the Cross-Sectional Mean Reversion signal using the normalized prices.
             results_df = calculate_cs_mean_reversion(results_df, normalized_prices)
         else:
             st.warning("Winsorized returns dictionary is empty. Skipping advanced signal calculations.")
-            # Ensure the column exists to prevent downstream errors, even if it's all NaN.
             results_df['CS_Mean_Reversion'] = np.nan
+    st.success("Advanced signals generated.")
     st.success("Advanced signals generated.")
     st.success("Advanced signals generated.")
 
