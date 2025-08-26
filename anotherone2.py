@@ -371,39 +371,66 @@ def filter_tickers_by_history(_tickers, min_years=5):
     st.write(f"Pre-filtering {len(_tickers)} tickers for at least {min_years} years of history...")
     
     # 1. Determine the exact start date we need to check against.
-    # We fetch data starting from this date. If a stock has data on this date,
-    # it means its history is at least the required length.
     start_date_check = (datetime.now() - pd.DateOffset(years=min_years)).strftime('%Y-%m-%d')
     
     # 2. Perform ONE single, efficient bulk download for all tickers.
     # We only need one data point per day, so 'Close' is sufficient.
+    progress_text = f"Downloading initial data for {len(_tickers)} tickers to verify history. Please wait."
+    my_bar = st.progress(0, text=progress_text)
+    
     try:
+        # We fetch a small window of data around the start date to check for existence.
         hist_data = yf.download(
             _tickers, 
             start=start_date_check, 
-            end=(pd.to_datetime(start_date_check) + pd.DateOffset(days=5)).strftime('%Y-%m-%d'), # Fetch a small window
-            progress=False
+            end=(pd.to_datetime(start_date_check) + pd.DateOffset(days=5)).strftime('%Y-%m-%d'), 
+            progress=False,
+            threads=True # Use threading for the single bulk download
         )['Close']
         
+        my_bar.progress(100, text="Data downloaded. Filtering...")
+
         if hist_data.empty:
-            st.warning("Could not download any historical data for pre-filtering. The API might be down. Skipping filter.")
+            st.warning("Could not download any historical data for pre-filtering. The API might be down or tickers may be invalid. Skipping filter.")
+            my_bar.empty()
             return _tickers # Fallback to the original list
 
     except Exception as e:
         st.error(f"An error occurred during the bulk data download for filtering: {e}")
+        my_bar.empty()
         return _tickers # Fallback to prevent crashing
 
     # 3. Process the single downloaded DataFrame in memory (this is extremely fast).
     valid_tickers = []
-    for ticker in _tickers:
-        if ticker in hist_data.columns:
-            # A ticker is valid if it has non-NaN data on or before our start date check.
-            # .first_valid_index() finds the first day the stock traded in our downloaded window.
-            first_trade_date = hist_data[ticker].first_valid_index()
-            if first_trade_date is not None and first_trade_date <= pd.to_datetime(start_date_check):
-                valid_tickers.append(ticker)
     
+    # If only one ticker is provided, the result is a Series, not a DataFrame.
+    if isinstance(hist_data, pd.Series):
+        if not hist_data.dropna().empty:
+            first_trade_date = hist_data.first_valid_index()
+            if first_trade_date is not None and first_trade_date <= pd.to_datetime(start_date_check):
+                # The series name is the ticker symbol.
+                valid_tickers.append(hist_data.name)
+    else: # If multiple tickers, hist_data is a DataFrame
+        for ticker in _tickers:
+            if ticker in hist_data.columns:
+                # A ticker is valid if it has non-NaN data on or before our start date check.
+                # .first_valid_index() finds the first day the stock traded in our downloaded window.
+                first_trade_date = hist_data[ticker].first_valid_index()
+                if first_trade_date is not None and first_trade_date <= pd.to_datetime(start_date_check):
+                    valid_tickers.append(ticker)
+
+    my_bar.empty()
     return sorted(valid_tickers)
+
+# --- THE FOLLOWING INEFFICIENT FUNCTIONS HAVE BEEN REMOVED ---
+# def _check_single_ticker_history(ticker, min_years):
+#     ...
+#
+# @st.cache_data
+# def filter_tickers_by_history(_tickers, min_years=5):
+#    (The multi-threaded version that makes individual API calls)
+#     ...
+# -----------------------------------------------------------
 def _check_single_ticker_history(ticker, min_years):
     """
     Worker function for the thread pool. Fetches history for a single ticker
