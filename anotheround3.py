@@ -1319,21 +1319,26 @@ def winsorize_returns(returns_dict, lookback_T=126, d_max=6.0):
     winsorized_dict = {}
     total_winsorized_points = 0
 
+    # Check if input is empty
     if not returns_dict:
         logging.warning("Input returns_dict is empty. Returning empty winsorized_dict.")
         return {}
 
+    # Count how many tickers have sufficient data
+    valid_tickers_count = 0
+    
     for ticker, log_returns in returns_dict.items():
         if log_returns.empty:
             logging.warning(f"Ticker {ticker} has empty log_returns series. Skipping.")
             continue
+            
         if len(log_returns) < lookback_T:
-            logging.warning(f"Ticker {ticker} has insufficient data ({len(log_returns)} < {lookback_T}). Skipping.")
-            winsorized_dict[ticker] = log_returns
+            logging.warning(f"Ticker {ticker} has insufficient data ({len(log_returns)} < {lookback_T}). Using original returns.")
+            winsorized_dict[ticker] = log_returns  # Use original returns instead of skipping
             continue
+            
         if log_returns.isna().all():
             logging.warning(f"Ticker {ticker} has all NaN log returns. Skipping.")
-            winsorized_dict[ticker] = log_returns
             continue
 
         # Use simple returns for the formula's r_it component
@@ -1343,7 +1348,7 @@ def winsorize_returns(returns_dict, lookback_T=126, d_max=6.0):
         abs_log_returns = log_returns.abs()
         
         # Calculate the rolling median denominator from the formula
-        rolling_median_denom = abs_log_returns.rolling(window=lookback_T, min_periods=20).median().shift(1)
+        rolling_median_denom = abs_log_returns.rolling(window=lookback_T, min_periods=max(1, lookback_T//4)).median().shift(1)
         
         # Avoid division by zero and fill NaNs robustly
         rolling_median_denom.replace(0, np.nan, inplace=True)
@@ -1372,14 +1377,18 @@ def winsorize_returns(returns_dict, lookback_T=126, d_max=6.0):
             winsorized_returns_series[outliers_mask] = signed_cap
             
             winsorized_dict[ticker] = winsorized_returns_series
+            valid_tickers_count += 1
         else:
             # No outliers, just use the original series
             winsorized_dict[ticker] = log_returns
+            valid_tickers_count += 1
     
-    if not winsorized_dict:
-        logging.warning("Winsorized_dict is empty. No tickers had sufficient data for winsorization.")
+    if valid_tickers_count == 0:
+        logging.warning("No tickers had sufficient data for winsorization. Using original returns for all tickers.")
+        # Fallback: return original returns if no tickers could be winsorized
+        return returns_dict
     
-    logging.info(f"Winsorization complete. Capped {total_winsorized_points} outlier data points across all tickers.")
+    logging.info(f"Winsorization complete. Capped {total_winsorized_points} outlier data points across {valid_tickers_count} tickers.")
     return winsorized_dict
 def display_deep_dive_data(ticker_symbol):
     data = fetch_and_organize_deep_dive_data(ticker_symbol)
@@ -4147,19 +4156,33 @@ def main():
 
     # --- CORRECTED ORDER OF OPERATIONS ---
     # 1. First, we must clean the raw returns.
+# 1. First, we must clean the raw returns.
     with st.spinner("Applying Winsorization to clean return data..."):
         winsorized_returns_dict = winsorize_returns(returns_dict, lookback_T=126, d_max=7.0)
-    st.success("Return data cleaned successfully.")
+    
+# If winsorization fails, use the original returns
+    if not winsorized_returns_dict:
+        st.warning("Winsorization failed or returned empty. Using original returns for analysis.")
+        winsorized_returns_dict = returns_dict
+    
+    st.success(f"Return data cleaned successfully. Processed {len(winsorized_returns_dict)} tickers.")
 
-    # 2. Now, with clean returns, we can generate advanced signals.
+# 2. Now, with clean returns, we can generate advanced signals.
     with st.spinner("Generating advanced signals (Carry, Mean Reversion)..."):
         results_df = calculate_relative_carry(results_df)
+    
         if winsorized_returns_dict: # Check if winsorized_returns_dict is not empty
             normalized_prices = get_all_prices_and_vols(list(winsorized_returns_dict.keys()), winsorized_returns_dict)
-            results_df = calculate_cs_mean_reversion(results_df, normalized_prices)
+        
+            if not normalized_prices.empty:
+                results_df = calculate_cs_mean_reversion(results_df, normalized_prices)
+            else:
+                st.warning("Normalized prices calculation failed. Skipping CS Mean Reversion.")
+                results_df['CS_Mean_Reversion'] = np.nan
         else:
-            st.warning("Winsorized returns dictionary is empty. Skipping normalized price and CS Mean Reversion calculations.")
-            results_df['CS_Mean_Reversion'] = np.nan # Ensure column exists if it was to be used
+            st.warning("No returns data available. Skipping normalized price and CS Mean Reversion calculations.")
+            results_df['CS_Mean_Reversion'] = np.nan
+        
     st.success("Advanced signals generated.")
 
     # --- Automatic Factor Weighting ---
