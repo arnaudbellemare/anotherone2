@@ -1387,7 +1387,7 @@ def display_deep_dive_data(ticker_symbol):
 
 # --- Advanced Metric & Data Fetching Functions ---
 @lru_cache(maxsize=None)
-def fetch_etf_history(ticker, period="3y"):
+def fetch_etf_history(ticker, period="5y"):
     history = yf.Ticker(ticker).history(period=period, auto_adjust=True, interval="1d")
     if history.empty or 'Close' not in history.columns: raise ValueError(f"No valid data for {ticker}")
     history.index = history.index.tz_localize(None)
@@ -1396,7 +1396,7 @@ def fetch_etf_history(ticker, period="3y"):
     return history
 
 @st.cache_data
-def fetch_all_etf_histories(_etf_list, period="3y"):
+def fetch_all_etf_histories(_etf_list, period="5y"):
     etf_histories = {}
     with ThreadPoolExecutor(max_workers=10) as executor:
         future_to_etf = {executor.submit(fetch_etf_history, etf, period): etf for etf in _etf_list}
@@ -1408,8 +1408,19 @@ def fetch_all_etf_histories(_etf_list, period="3y"):
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 def fetch_ticker_data(ticker_symbol):
+    """
+    --- THIS IS THE CORRECTED, ROBUST VERSION ---
+    Fetches data and safely handles timezones.
+    """
     ticker = yf.Ticker(ticker_symbol)
-    history = ticker.history(period="3y", auto_adjust=True, interval="1d").tz_localize(None)
+    
+    # 1. Fetch data WITHOUT tz_localize first
+    history = ticker.history(period="5y", auto_adjust=True, interval="1d")
+    
+    # 2. SAFELY handle the timezone. Check if it exists before trying to remove it.
+    if not history.empty and history.index.tz is not None:
+        history = history.tz_convert(None)
+        
     info = ticker.info
     financials = ticker.financials
     balancesheet = ticker.balance_sheet
@@ -1417,8 +1428,8 @@ def fetch_ticker_data(ticker_symbol):
     quarterly_financials = ticker.quarterly_financials
     quarterly_balancesheet = ticker.quarterly_balance_sheet
     quarterly_cashflow = ticker.quarterly_cashflow
+    
     return ticker, history, info, financials, balancesheet, cashflow, quarterly_financials, quarterly_balancesheet, quarterly_cashflow
-
 # --- Quantitative Functions ---
 
 def calculate_mahalanobis_metrics(returns, cov_matrix, periods=252):
