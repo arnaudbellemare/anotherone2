@@ -3777,59 +3777,88 @@ def process_single_ticker(ticker_symbol, etf_histories, sector_etf_map):
 
         # --- Final Data Preparation ---
         # Correctly generate log_returns
+        # --- Final Data Preparation (This part remains the same) ---
         log_returns = pd.Series(dtype=float)
         if not history.empty and 'Close' in history.columns and not history['Close'].isnull().all():
             close_prices = history['Close'].dropna()
             if len(close_prices) > 1:
-                 log_returns = np.log(close_prices / close_prices.shift(1)).dropna()
+                 if (close_prices > 0).all():
+                    log_returns = np.log(close_prices / close_prices.shift(1)).dropna()
+                 else:
+                    logging.warning(f"Non-positive close prices found for {ticker_symbol}, cannot calculate log returns.")
 
-        # Return a list of values ordered by the global 'columns' list.
         return [data.get(col) for col in columns], log_returns
 
     except Exception as e:
         logging.error(f"Critical error processing {ticker_symbol}: {e}", exc_info=True)
-        # Initialize data with NaNs before filling the error message
-        data = {col: np.nan for col in columns}
-        data['Ticker'] = ticker_symbol
         data['Name'] = f"{ticker_symbol} (Processing Error)"
         return [data.get(col) for col in columns], pd.Series(dtype=float)
         
+# REPLACE your existing process_tickers function with this one.
 @st.cache_data
 def process_tickers(_tickers, _etf_histories, _sector_etf_map):
     results, returns_dict, failed_tickers = [], {}, []
+    
+    # Step 1: Pre-fetch all data in parallel
+    all_ticker_data = {}
     with ThreadPoolExecutor(max_workers=10) as executor:
-        future_to_ticker = {executor.submit(process_single_ticker, ticker, _etf_histories, _sector_etf_map): ticker for ticker in _tickers}
-        for future in tqdm(as_completed(future_to_ticker), total=len(_tickers), desc="Processing All Ticker Metrics"):
-            ticker = future_to_ticker[future]
+        future_to_fetch = {executor.submit(fetch_ticker_data, ticker): ticker for ticker in _tickers}
+        for future in tqdm(as_completed(future_to_fetch), total=len(_tickers), desc="Fetching All Ticker Data"):
+            ticker_symbol = future_to_fetch[future]
             try:
-                result, returns = future.result()
-                # Check if 'Name' (index 1) is valid to determine if processing was successful
-                if result and pd.notna(result[1]): # Improved check for successful processing
-                    results.append(result)
-                    if returns is not None and not returns.empty:
-                        returns_dict[ticker] = returns
+                all_ticker_data[ticker_symbol] = future.result()
+            except Exception as e:
+                logging.error(f"Failed to fetch initial data for {ticker_symbol}: {e}")
+                # Store a "failure" tuple so the next step knows to skip it
+                all_ticker_data[ticker_symbol] = (None, pd.DataFrame(), {}, pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame())
+
+    # Step 2: Process each ticker using the pre-fetched data in parallel
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_process = {}
+        for ticker_symbol in _tickers:
+            # Unpack the pre-fetched data
+            (ticker_obj, history, info, financials, balancesheet, cashflow, 
+             q_financials, q_balancesheet, q_cashflow) = all_ticker_data[ticker_symbol]
+            
+            # Submit to the new processing function that ACCEPTS data as arguments
+            future = executor.submit(
+                process_single_ticker, 
+                ticker_symbol, _etf_histories, _sector_etf_map, 
+                ticker_obj, history, info, financials, balancesheet, cashflow, 
+                q_financials, q_balancesheet, q_cashflow
+            )
+            future_to_process[future] = ticker_symbol
+
+        for future in tqdm(as_completed(future_to_process), total=len(_tickers), desc="Processing All Ticker Metrics"):
+            ticker = future_to_process[future]
+            try:
+                result_metrics_list, log_returns_series = future.result()
+                results.append(result_metrics_list)
+                if log_returns_series is not None and not log_returns_series.empty:
+                    returns_dict[ticker] = log_returns_series
                 else:
+                    # This now correctly logs tickers that had data but failed processing
                     failed_tickers.append(ticker)
             except Exception as e:
                 logging.error(f"Failed to process {ticker} in future: {e}")
                 failed_tickers.append(ticker)
             
     if not results:
-        return pd.DataFrame(columns=columns), failed_tickers, {} # Explicitly returned empty dict for returns_dict
+        return pd.DataFrame(columns=columns), failed_tickers, {}
     
     results_df = pd.DataFrame(results, columns=columns)
     
+    # Post-processing (this part will now succeed)
     numeric_cols = [c for c in columns if c not in ['Ticker', 'Name', 'Sector', 'Best_Factor', 'Risk_Flag']]
     results_df[numeric_cols] = results_df[numeric_cols].apply(pd.to_numeric, errors='coerce')
     
     for col in results_df.select_dtypes(include=np.number).columns:
         if results_df[col].isna().all():
-            results_df[col] = 0.0 # Fill entirely NaN columns with 0
+            results_df[col] = 0.0
         else:
             median_val = results_df[col].median()
-            results_df[col] = results_df[col].fillna(median_val) # Direct assignment
-
-        if results_df[col].var() < 1e-8: # Add small noise to constant columns
+            results_df[col] = results_df[col].fillna(median_val)
+        if results_df[col].var() < 1e-8:
             results_df[col] += np.random.normal(0, 0.01, len(results_df))
     
     return results_df.infer_objects(copy=False), failed_tickers, returns_dict
