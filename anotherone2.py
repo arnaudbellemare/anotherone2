@@ -2537,26 +2537,60 @@ def set_weights_from_stability(stability_df, all_metrics, reverse_metric_map):
     
     return final_weights_dict, stability_df
 
+# REPLACE your old check_multicollinearity function with this one
 def check_multicollinearity(X, characteristics, vif_threshold=10):
-    if X.empty or X.shape[1] < 2: return characteristics
-    X_clean = X.copy().replace([np.inf, -np.inf], np.nan).fillna(X.median())
-    non_zero_var_cols = [col for col in X_clean.columns if X_clean[col].var() > 1e-8]
-    X_clean = X_clean[non_zero_var_cols]
-    characteristics = [c for c in characteristics if c in non_zero_var_cols]
-    if X_clean.shape[1] < 2: return characteristics
-    corr_matrix = X_clean.corr().abs()
-    upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
-    to_drop = [column for column in upper.columns if any(upper[column] > 0.99)]
-    X_filtered = X_clean.drop(columns=to_drop)
-    characteristics_filtered = [c for c in characteristics if c not in to_drop]
-    if len(characteristics_filtered) < 2: return characteristics_filtered
-    try:
-        vif_data = pd.DataFrame()
-        vif_data["feature"] = X_filtered.columns
-        vif_data["VIF"] = [variance_inflation_factor(X_filtered.values, i) for i in range(len(X_filtered.columns))]
-        high_vif_features = vif_data[vif_data['VIF'] > vif_threshold]['feature'].tolist()
-        return [c for c in characteristics_filtered if c not in high_vif_features]
-    except Exception: return characteristics_filtered
+    """
+    Identifies and removes multicollinear features using an iterative VIF approach.
+    This version is robust against perfect multicollinearity and constant columns.
+    """
+    if X.empty or X.shape[1] < 2:
+        return characteristics
+        
+    X_clean = X.copy()
+
+    # Step 1: Vigorously drop columns with zero or near-zero variance first.
+    variances = X_clean.var(numeric_only=True)
+    cols_to_drop_low_var = variances[variances < 1e-9].index.tolist()
+    if cols_to_drop_low_var:
+        X_clean.drop(columns=cols_to_drop_low_var, inplace=True)
+        logging.warning(f"Dropped for low variance before VIF: {cols_to_drop_low_var}")
+
+    # Step 2: Handle NaNs/Infs after dropping constant columns
+    X_clean.replace([np.inf, -np.inf], np.nan, inplace=True)
+    for col in X_clean.columns:
+        if X_clean[col].isnull().any():
+            X_clean[col].fillna(X_clean[col].median(), inplace=True)
+
+    if X_clean.shape[1] < 2:
+        return X_clean.columns.tolist()
+
+    # Step 3: Iteratively remove the feature with the highest VIF
+    features = X_clean.columns.tolist()
+    
+    while True:
+        # Stop if we have too few features left
+        if len(features) < 2:
+            break
+
+        # Calculate VIF for the current set of features
+        vif_data = pd.Series(
+            [variance_inflation_factor(X_clean[features].values, i) for i in range(len(features))],
+            index=features,
+            dtype=float
+        ).replace([np.inf, -np.inf], 1e9) # Replace inf with a large number for stability
+
+        max_vif = vif_data.max()
+        
+        if max_vif > vif_threshold:
+            feature_to_drop = vif_data.idxmax()
+            features.remove(feature_to_drop)
+            logging.info(f"Dropped '{feature_to_drop}' due to high VIF: {max_vif:.2f}")
+        else:
+            # All remaining features are below the threshold, so we're done.
+            break
+            
+    # Return the original characteristics that survived the VIF gauntlet
+    return [c for c in characteristics if c in features]
 
 def calculate_portfolio_factor_correlations(weighted_df, etf_histories, period="7y", min_days=240):
     """
@@ -3795,11 +3829,12 @@ def process_single_ticker(ticker_symbol, etf_histories, sector_etf_map):
         return [data.get(col) for col in columns], pd.Series(dtype=float)
         
 # REPLACE your existing process_tickers function with this one.
+# REPLACE your existing process_tickers function with this one.
 @st.cache_data
 def process_tickers(_tickers, _etf_histories, _sector_etf_map):
     results, returns_dict, failed_tickers = [], {}, []
     
-    # Step 1: Pre-fetch all data in parallel
+    # Step 1: Pre-fetch all data in parallel (This part is correct and stays)
     all_ticker_data = {}
     with ThreadPoolExecutor(max_workers=10) as executor:
         future_to_fetch = {executor.submit(fetch_ticker_data, ticker): ticker for ticker in _tickers}
@@ -3809,18 +3844,15 @@ def process_tickers(_tickers, _etf_histories, _sector_etf_map):
                 all_ticker_data[ticker_symbol] = future.result()
             except Exception as e:
                 logging.error(f"Failed to fetch initial data for {ticker_symbol}: {e}")
-                # Store a "failure" tuple so the next step knows to skip it
                 all_ticker_data[ticker_symbol] = (None, pd.DataFrame(), {}, pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame())
 
-    # Step 2: Process each ticker using the pre-fetched data in parallel
+    # Step 2: Process the pre-fetched data in parallel
     with ThreadPoolExecutor(max_workers=10) as executor:
         future_to_process = {}
         for ticker_symbol in _tickers:
-            # Unpack the pre-fetched data
             (ticker_obj, history, info, financials, balancesheet, cashflow, 
              q_financials, q_balancesheet, q_cashflow) = all_ticker_data[ticker_symbol]
             
-            # Submit to the new processing function that ACCEPTS data as arguments
             future = executor.submit(
                 process_single_ticker, 
                 ticker_symbol, _etf_histories, _sector_etf_map, 
@@ -3833,14 +3865,19 @@ def process_tickers(_tickers, _etf_histories, _sector_etf_map):
             ticker = future_to_process[future]
             try:
                 result_metrics_list, log_returns_series = future.result()
-                results.append(result_metrics_list)
-                if log_returns_series is not None and not log_returns_series.empty:
-                    returns_dict[ticker] = log_returns_series
-                else:
-                    # This now correctly logs tickers that had data but failed processing
+                
+                # *** KEY CHANGE #1: Smarter failure detection ***
+                # We check the 'Name' field (at index 1) to see if it's an error message.
+                if "(Processing Error)" in result_metrics_list[1] or "(Failed to fetch" in result_metrics_list[1]:
                     failed_tickers.append(ticker)
+                else:
+                    # If it's not an error, it's a success. Add the metrics to our results.
+                    results.append(result_metrics_list)
+                    # THEN, check if we also got valid log returns to add to the dictionary.
+                    if log_returns_series is not None and not log_returns_series.empty:
+                        returns_dict[ticker] = log_returns_series
             except Exception as e:
-                logging.error(f"Failed to process {ticker} in future: {e}")
+                logging.error(f"A future failed unexpectedly for {ticker}: {e}")
                 failed_tickers.append(ticker)
             
     if not results:
@@ -3848,7 +3885,7 @@ def process_tickers(_tickers, _etf_histories, _sector_etf_map):
     
     results_df = pd.DataFrame(results, columns=columns)
     
-    # Post-processing (this part will now succeed)
+    # Post-processing (This part stays the same)
     numeric_cols = [c for c in columns if c not in ['Ticker', 'Name', 'Sector', 'Best_Factor', 'Risk_Flag']]
     results_df[numeric_cols] = results_df[numeric_cols].apply(pd.to_numeric, errors='coerce')
     
@@ -3860,8 +3897,12 @@ def process_tickers(_tickers, _etf_histories, _sector_etf_map):
             results_df[col] = results_df[col].fillna(median_val)
         if results_df[col].var() < 1e-8:
             results_df[col] += np.random.normal(0, 0.01, len(results_df))
+            
+    # *** KEY CHANGE #2: Fix the fragmentation warning ***
+    # This creates a new, clean copy of the DataFrame in memory.
+    results_df = results_df.copy()
     
-    return results_df.infer_objects(copy=False), failed_tickers, returns_dict
+    return results_df, failed_tickers, returns_dict
 @st.cache_data
 def run_factor_stability_analysis(_results_df, _all_possible_metrics, _reverse_metric_map):
     """
