@@ -1303,104 +1303,72 @@ def get_benchmark_metrics(benchmark_ticker="SPY", period="3y"):
         return {'Volatility': np.nan, 'Sharpe Ratio': np.nan}       
 def winsorize_returns(returns_dict, lookback_T=126, d_max=6.0):
     """
-    Winsorizes returns based on the robust z-score method.
-    This version is more robust and handles edge cases better.
+    Winsorizes returns based on the robust z-score method described in
+    "The Elements of Quantitative Investing".
+
+    d_{i,t} = |log(1 + r_it)| / median(|log(1 + r_{i,t-1})|, ..., |log(1 + r_{i,t-T})|)
+
+    Args:
+        returns_dict (dict): Dictionary where keys are tickers and values are pd.Series of log returns.
+        lookback_T (int): The lookback period (T) for the rolling median.
+        d_max (float): The threshold. Returns whose score exceeds this are capped.
+
+    Returns:
+        dict: A new dictionary with the winsorized log return series.
     """
     winsorized_dict = {}
     total_winsorized_points = 0
-    valid_tickers_count = 0
 
-    # Check if input is empty or None
-    if not returns_dict or returns_dict is None:
-        logging.warning("Input returns_dict is empty or None. Returning empty winsorized_dict.")
-        return {}
-
-    # Debug: Check what's actually in returns_dict
-    logging.info(f"Winsorization input: {len(returns_dict)} tickers")
-    
     for ticker, log_returns in returns_dict.items():
-        # Skip if returns is None, empty, or not a Series
-        if log_returns is None or not isinstance(log_returns, pd.Series):
-            logging.warning(f"Ticker {ticker} has invalid returns data (None or wrong type). Skipping.")
-            continue
-            
-        if log_returns.empty:
-            logging.warning(f"Ticker {ticker} has empty returns series. Skipping.")
-            continue
-            
-        # Check if all values are NaN
-        if log_returns.isna().all():
-            logging.warning(f"Ticker {ticker} has all NaN returns. Skipping.")
+        if log_returns.empty or len(log_returns) < lookback_T:
+            winsorized_dict[ticker] = log_returns
             continue
 
-        # Ensure we have enough data, but be more lenient
-        min_required = max(10, lookback_T // 3)  # Require at least 10 data points or 1/3 of lookback
-        if len(log_returns) < min_required:
-            logging.warning(f"Ticker {ticker} has insufficient data ({len(log_returns)} < {min_required}). Using original returns.")
+        # Use simple returns for the formula's r_it component
+        simple_returns = np.expm1(log_returns)
+        
+        # Calculate the absolute log returns for the median calculation
+        abs_log_returns = log_returns.abs()
+        
+        # Calculate the rolling median denominator from the formula
+        rolling_median_denom = abs_log_returns.rolling(window=lookback_T, min_periods=20).median().shift(1)
+        
+        
+        # Avoid division by zero and fill NaNs robustly
+        rolling_median_denom.replace(0, np.nan, inplace=True)
+        # FIX: Replaced deprecated .fillna(method=...) with .ffill()
+        rolling_median_denom.ffill(inplace=True)
+        # Backfill any remaining NaNs at the beginning of the series
+        rolling_median_denom.fillna(abs_log_returns.median(), inplace=True)
+        
+        # Calculate the d_it score for each point in time
+        d_it = abs_log_returns / rolling_median_denom
+        
+        # Identify outliers
+        outliers_mask = d_it > d_max
+        
+        if outliers_mask.any():
+            total_winsorized_points += outliers_mask.sum()
+            
+            # Create a copy to modify
+            winsorized_returns_series = log_returns.copy()
+            
+            # For each outlier, calculate the capped value
+            # Capped |log(1+r)| = d_max * median(...)
+            cap_value = d_max * rolling_median_denom[outliers_mask]
+            
+            # Preserve the original sign of the outlier return
+            signed_cap = np.sign(log_returns[outliers_mask]) * cap_value
+            
+            # Apply the cap
+            winsorized_returns_series[outliers_mask] = signed_cap
+            
+            winsorized_dict[ticker] = winsorized_returns_series
+        else:
+            # No outliers, just use the original series
             winsorized_dict[ticker] = log_returns
-            valid_tickers_count += 1
-            continue
-
-        try:
-            # Use simple returns for the formula's r_it component
-            simple_returns = np.expm1(log_returns)
             
-            # Calculate the absolute log returns for the median calculation
-            abs_log_returns = log_returns.abs()
-            
-            # Calculate the rolling median with more lenient min_periods
-            rolling_median_denom = abs_log_returns.rolling(
-                window=lookback_T, 
-                min_periods=max(5, lookback_T // 5)  # More lenient minimum periods
-            ).median().shift(1)
-            
-            # Handle NaN values more robustly
-            if rolling_median_denom.isna().all():
-                # If all are NaN, use the overall median
-                overall_median = abs_log_returns.median()
-                if pd.isna(overall_median) or overall_median == 0:
-                    overall_median = 1e-6  # Small value to avoid division by zero
-                rolling_median_denom = pd.Series(overall_median, index=log_returns.index)
-            else:
-                # Forward fill and then backfill if needed
-                rolling_median_denom = rolling_median_denom.ffill().bfill()
-                # Replace any remaining zeros with a small value
-                rolling_median_denom.replace(0, 1e-6, inplace=True)
-            
-            # Calculate the d_it score for each point in time
-            d_it = abs_log_returns / rolling_median_denom
-            
-            # Identify outliers
-            outliers_mask = d_it > d_max
-            
-            if outliers_mask.any():
-                total_winsorized_points += outliers_mask.sum()
-                
-                # Create a copy to modify
-                winsorized_returns_series = log_returns.copy()
-                
-                # For each outlier, calculate the capped value
-                cap_value = d_max * rolling_median_denom[outliers_mask]
-                
-                # Preserve the original sign of the outlier return
-                signed_cap = np.sign(log_returns[outliers_mask]) * cap_value
-                
-                # Apply the cap
-                winsorized_returns_series[outliers_mask] = signed_cap
-                
-                winsorized_dict[ticker] = winsorized_returns_series
-            else:
-                # No outliers, just use the original series
-                winsorized_dict[ticker] = log_returns
-                
-            valid_tickers_count += 1
-            
-        except Exception as e:
-            logging.error(f"Error winsorizing {ticker}: {e}. Using original returns.")
-            winsorized_dict[ticker] = log_returns
-            valid_tickers_count += 1
-    
-    logging.info(f"Winsorization completed: {valid_tickers_count} tickers processed, {total_winsorized_points} outliers capped")
+    logging.info(f"Winsorization complete. Capped {total_winsorized_points} outlier data points across all tickers.")
     return winsorized_dict
 def display_deep_dive_data(ticker_symbol):
     data = fetch_and_organize_deep_dive_data(ticker_symbol)
@@ -2858,9 +2826,13 @@ def process_single_ticker(ticker_symbol, etf_histories, sector_etf_map):
         returns_perf = calculate_returns_cached(ticker_symbol, tuple([5, 10, 21, 63, 126, 252]))
         data.update({f"Return_{p}d": returns_perf.get(f"Return_{p}d") for p in [5, 10, 21, 63, 126, 252]})
         
+        # FIX: PROPERLY HANDLE LOG RETURNS CALCULATION
         log_returns = pd.Series(dtype=float)
         if not history.empty and 'Close' in history.columns and (history['Close'] > 0).all():
-            log_returns = np.log(history['Close'] / history['Close'].shift(1)).dropna()
+            # Calculate log returns properly
+            price_series = history['Close']
+            log_returns = np.log(price_series / price_series.shift(1)).dropna()
+            
             if not log_returns.empty:
                 data.update({
                     'GARCH_Vol': calculate_garch_volatility(log_returns),
@@ -2916,7 +2888,10 @@ def process_single_ticker(ticker_symbol, etf_histories, sector_etf_map):
         profit_metrics = [m for m in [data.get('ROE'), data.get('ROIC'), data.get('Net_Profit_Margin')] if pd.notna(m)]
         data['Profitability_Factor'] = min(_safe_division(np.mean(profit_metrics), 100.0, 0.0), 1.0) if profit_metrics else 0.0
         data['Carry'] = (data.get('Earnings_Yield', 0) + data.get('FCF_Yield', 0)) / 2.0
-        
+                log_returns = pd.Series(dtype=float) # Initialized empty Series
+        if not history.empty and 'Close' in history.columns:
+            log_returns = np.log(history['Close'] / history['Close'].shift(1)).dropna() # FIX: fill_method=None is implicit here
+            if not log_returns.empty:
         # --- RETURN FINAL DATA ---
         result_list = [data.get(col) for col in columns]
         return result_list, log_returns
