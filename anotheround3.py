@@ -2822,26 +2822,27 @@ def process_single_ticker(ticker_symbol, etf_histories, sector_etf_map):
             'BP': data['Book_to_Market_Ratio'],
         })
 
-        # --- Time-Series & Technicals (using `history` and `log_returns`) ---
+# --- Time-Series & Technicals (using `history` and `log_returns`) ---
         returns_perf = calculate_returns_cached(ticker_symbol, tuple([5, 10, 21, 63, 126, 252]))
         data.update({f"Return_{p}d": returns_perf.get(f"Return_{p}d") for p in [5, 10, 21, 63, 126, 252]})
         
+        # --- START OF THE FIX ---
+        # Initialize log_returns as an empty Series first.
         log_returns = pd.Series(dtype=float)
 
-# Check if history is usable
+        # Check if history is usable.
         if not history.empty and 'Close' in history.columns:
     
-    # 1. THE FIX: Filter out any non-positive prices instead of rejecting the whole series.
-    #    This prevents log(0) errors and is much more robust than the `.all()` check.
+            # 1. THE FIX: Filter out any non-positive prices instead of rejecting the whole series.
+            #    This prevents log(0) errors and is much more robust than the old `.all()` check.
             price_series = history['Close'][history['Close'] > 0]
 
-    # 2. Proceed only if there are valid prices left after filtering.
+            # 2. Proceed only if there are valid prices left after filtering.
             if not price_series.empty:
                 log_returns = np.log(price_series / price_series.shift(1)).dropna()
 
-    # 3. All subsequent calculations are now inside a check for valid log_returns.
-    #    This ensures they only run if the return series was successfully created.
- 
+            # 3. All subsequent calculations are now inside a check for valid log_returns.
+            #    This ensures they only run if the return series was successfully created.
             if not log_returns.empty:
                 data.update({
                     'GARCH_Vol': calculate_garch_volatility(log_returns),
@@ -2885,8 +2886,11 @@ def process_single_ticker(ticker_symbol, etf_histories, sector_etf_map):
                     data['Rolling_Market_Correlation'] = rolling_correlations.get('SPY', np.nan)
                     best_etf_hist = etf_histories.get(best_factor_ticker)
                     if best_etf_hist is not None and len(history.index.intersection(best_etf_hist.index)) > 200:
-                        relative_strength = history['Close'] / best_etf_hist['Close']
-                        data['Relative_Z_Score'] = calculate_volatility_adjusted_z_score(relative_strength.dropna(), ticker=ticker_symbol, sector=data['Sector'])
+                        # Use the already cleaned price_series for this calculation
+                        common_strength_idx = price_series.index.intersection(best_etf_hist['Close'].index)
+                        if len(common_strength_idx) > 200:
+                            relative_strength = price_series.loc[common_strength_idx] / best_etf_hist['Close'].loc[common_strength_idx]
+                            data['Relative_Z_Score'] = calculate_volatility_adjusted_z_score(relative_strength.dropna(), ticker=ticker_symbol, sector=data['Sector'])
 
         # --- Final Derived & Style Factors ---
         data['Momentum'] = data['Return_252d']
