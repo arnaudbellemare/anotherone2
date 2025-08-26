@@ -4274,33 +4274,67 @@ def main():
     # --- Data Fetching and Initial Processing ---
     with st.spinner("Fetching ETF and Macroeconomic histories..."):
         etf_histories = fetch_all_etf_histories(etf_list)
-        macro_data = fetch_macro_data() # Fetch macro data, but it won't be used for weight adjustments now
+        macro_data = fetch_macro_data()
     st.success("All historical data loaded.")
 
-    with st.spinner(f"Processing {len(tickers)} tickers..."):
+    with st.spinner(f"Processing {len(tickers)} tickers... This may take a moment."):
+        # This function calculates the ABSOLUTE value for all base and institutional factors.
         results_df, failed_tickers, returns_dict = process_tickers(tickers, etf_histories, sector_etf_map)
 
     if results_df.empty:
-        st.error("Fatal Error: No tickers could be processed."); st.stop()
+        st.error("Fatal Error: No tickers could be processed. Please check ticker list and network connection.")
+        st.stop()
     st.success(f"Successfully processed {len(results_df)} tickers.")
     if failed_tickers:
-        st.expander("Show Failed Tickers").warning(f"{len(failed_tickers)} tickers failed: {', '.join(failed_tickers)}")
+        with st.expander("Show Failed Tickers"):
+            st.warning(f"{len(failed_tickers)} tickers failed to process: {', '.join(failed_tickers)}")
 
-    # --- CORRECTED ORDER OF OPERATIONS ---
-    # 1. First, we must clean the raw returns.
-    with st.spinner("Applying Winsorization to clean return data..."):
+    # --- Post-Processing for Relative Institutional Factors ---
+    # This is the new, crucial step. We must perform this before calculating signals that rely on final factor values.
+    with st.spinner("Calculating industry-relative and historical-relative factors..."):
+        # Group by sector to calculate industry medians for all relevant factors at once.
+        # We exclude non-numeric columns and the 'Sector' column itself.
+        numeric_cols = results_df.select_dtypes(include=np.number).columns.tolist()
+        if 'Sector' in results_df.columns and not results_df['Sector'].isnull().all():
+            sector_medians = results_df.groupby('Sector')[numeric_cols].transform('median')
+
+            # Now, calculate the true industry-relative value for each factor.
+            # The signal is often the stock's value minus the industry median.
+            for col in results_df.columns:
+                if col.startswith('IndRel_'):
+                    # Find the base factor name (e.g., 'IndRel_ROE' -> 'ROE')
+                    base_factor = col.replace('IndRel_', '')
+                    if base_factor in sector_medians.columns:
+                        results_df[col] = results_df[base_factor] - sector_medians[base_factor]
+        else:
+            st.warning("No 'Sector' data available to calculate industry-relative factors. These factors will be NaN.")
+
+
+        # The `calculate_relative_carry` function also performs a sector-relative calculation,
+        # so it logically fits within this post-processing block.
+        results_df = calculate_relative_carry(results_df)
+    st.success("Relative factors calculated successfully.")
+
+
+    # --- Data Cleaning and Advanced Signal Generation ---
+    # This order is correct: we clean the raw returns before using them for signals.
+    with st.spinner("Applying Winsorization to clean outlier return data..."):
+        # Winsorization is applied to the raw log-returns from `process_tickers`.
         winsorized_returns_dict = winsorize_returns(returns_dict, lookback_T=126, d_max=7.0)
     st.success("Return data cleaned successfully.")
 
-    # 2. Now, with clean returns, we can generate advanced signals.
-    with st.spinner("Generating advanced signals (Carry, Mean Reversion)..."):
-        results_df = calculate_relative_carry(results_df)
-        if winsorized_returns_dict: # Check if winsorized_returns_dict is not empty
+    with st.spinner("Generating advanced time-series signals (e.g., Mean Reversion)..."):
+        # These advanced signals are calculated *after* all fundamental data is processed and returns are cleaned.
+        if winsorized_returns_dict:
+            # Volatility-normalized prices are required for the mean reversion signal.
             normalized_prices = get_all_prices_and_vols(list(winsorized_returns_dict.keys()), winsorized_returns_dict)
+            # Calculate the Cross-Sectional Mean Reversion signal using the normalized prices.
             results_df = calculate_cs_mean_reversion(results_df, normalized_prices)
         else:
-            st.warning("Winsorized returns dictionary is empty. Skipping normalized price and CS Mean Reversion calculations.")
-            results_df['CS_Mean_Reversion'] = np.nan # Ensure column exists if it was to be used
+            st.warning("Winsorized returns dictionary is empty. Skipping advanced signal calculations.")
+            # Ensure the column exists to prevent downstream errors, even if it's all NaN.
+            results_df['CS_Mean_Reversion'] = np.nan
+    st.success("Advanced signals generated.")
     st.success("Advanced signals generated.")
 
     # --- Automatic Factor Weighting ---
