@@ -1303,92 +1303,104 @@ def get_benchmark_metrics(benchmark_ticker="SPY", period="3y"):
         return {'Volatility': np.nan, 'Sharpe Ratio': np.nan}       
 def winsorize_returns(returns_dict, lookback_T=126, d_max=6.0):
     """
-    Winsorizes returns based on the robust z-score method described in
-    "The Elements of Quantitative Investing".
-
-    d_{i,t} = |log(1 + r_it)| / median(|log(1 + r_{i,t-1})|, ..., |log(1 + r_{i,t-T})|)
-
-    Args:
-        returns_dict (dict): Dictionary where keys are tickers and values are pd.Series of log returns.
-        lookback_T (int): The lookback period (T) for the rolling median.
-        d_max (float): The threshold. Returns whose score exceeds this are capped.
-
-    Returns:
-        dict: A new dictionary with the winsorized log return series.
+    Winsorizes returns based on the robust z-score method.
+    This version is more robust and handles edge cases better.
     """
     winsorized_dict = {}
     total_winsorized_points = 0
+    valid_tickers_count = 0
 
-    # Check if input is empty
-    if not returns_dict:
-        logging.warning("Input returns_dict is empty. Returning empty winsorized_dict.")
+    # Check if input is empty or None
+    if not returns_dict or returns_dict is None:
+        logging.warning("Input returns_dict is empty or None. Returning empty winsorized_dict.")
         return {}
 
-    # Count how many tickers have sufficient data
-    valid_tickers_count = 0
+    # Debug: Check what's actually in returns_dict
+    logging.info(f"Winsorization input: {len(returns_dict)} tickers")
     
     for ticker, log_returns in returns_dict.items():
+        # Skip if returns is None, empty, or not a Series
+        if log_returns is None or not isinstance(log_returns, pd.Series):
+            logging.warning(f"Ticker {ticker} has invalid returns data (None or wrong type). Skipping.")
+            continue
+            
         if log_returns.empty:
-            logging.warning(f"Ticker {ticker} has empty log_returns series. Skipping.")
+            logging.warning(f"Ticker {ticker} has empty returns series. Skipping.")
             continue
             
-        if len(log_returns) < lookback_T:
-            logging.warning(f"Ticker {ticker} has insufficient data ({len(log_returns)} < {lookback_T}). Using original returns.")
-            winsorized_dict[ticker] = log_returns  # Use original returns instead of skipping
-            continue
-            
+        # Check if all values are NaN
         if log_returns.isna().all():
-            logging.warning(f"Ticker {ticker} has all NaN log returns. Skipping.")
+            logging.warning(f"Ticker {ticker} has all NaN returns. Skipping.")
             continue
 
-        # Use simple returns for the formula's r_it component
-        simple_returns = np.expm1(log_returns)
-        
-        # Calculate the absolute log returns for the median calculation
-        abs_log_returns = log_returns.abs()
-        
-        # Calculate the rolling median denominator from the formula
-        rolling_median_denom = abs_log_returns.rolling(window=lookback_T, min_periods=max(1, lookback_T//4)).median().shift(1)
-        
-        # Avoid division by zero and fill NaNs robustly
-        rolling_median_denom.replace(0, np.nan, inplace=True)
-        rolling_median_denom.ffill(inplace=True)
-        rolling_median_denom.fillna(abs_log_returns.median(), inplace=True)
-        
-        # Calculate the d_it score for each point in time
-        d_it = abs_log_returns / rolling_median_denom
-        
-        # Identify outliers
-        outliers_mask = d_it > d_max
-        
-        if outliers_mask.any():
-            total_winsorized_points += outliers_mask.sum()
-            
-            # Create a copy to modify
-            winsorized_returns_series = log_returns.copy()
-            
-            # For each outlier, calculate the capped value
-            cap_value = d_max * rolling_median_denom[outliers_mask]
-            
-            # Preserve the original sign of the outlier return
-            signed_cap = np.sign(log_returns[outliers_mask]) * cap_value
-            
-            # Apply the cap
-            winsorized_returns_series[outliers_mask] = signed_cap
-            
-            winsorized_dict[ticker] = winsorized_returns_series
+        # Ensure we have enough data, but be more lenient
+        min_required = max(10, lookback_T // 3)  # Require at least 10 data points or 1/3 of lookback
+        if len(log_returns) < min_required:
+            logging.warning(f"Ticker {ticker} has insufficient data ({len(log_returns)} < {min_required}). Using original returns.")
+            winsorized_dict[ticker] = log_returns
             valid_tickers_count += 1
-        else:
-            # No outliers, just use the original series
+            continue
+
+        try:
+            # Use simple returns for the formula's r_it component
+            simple_returns = np.expm1(log_returns)
+            
+            # Calculate the absolute log returns for the median calculation
+            abs_log_returns = log_returns.abs()
+            
+            # Calculate the rolling median with more lenient min_periods
+            rolling_median_denom = abs_log_returns.rolling(
+                window=lookback_T, 
+                min_periods=max(5, lookback_T // 5)  # More lenient minimum periods
+            ).median().shift(1)
+            
+            # Handle NaN values more robustly
+            if rolling_median_denom.isna().all():
+                # If all are NaN, use the overall median
+                overall_median = abs_log_returns.median()
+                if pd.isna(overall_median) or overall_median == 0:
+                    overall_median = 1e-6  # Small value to avoid division by zero
+                rolling_median_denom = pd.Series(overall_median, index=log_returns.index)
+            else:
+                # Forward fill and then backfill if needed
+                rolling_median_denom = rolling_median_denom.ffill().bfill()
+                # Replace any remaining zeros with a small value
+                rolling_median_denom.replace(0, 1e-6, inplace=True)
+            
+            # Calculate the d_it score for each point in time
+            d_it = abs_log_returns / rolling_median_denom
+            
+            # Identify outliers
+            outliers_mask = d_it > d_max
+            
+            if outliers_mask.any():
+                total_winsorized_points += outliers_mask.sum()
+                
+                # Create a copy to modify
+                winsorized_returns_series = log_returns.copy()
+                
+                # For each outlier, calculate the capped value
+                cap_value = d_max * rolling_median_denom[outliers_mask]
+                
+                # Preserve the original sign of the outlier return
+                signed_cap = np.sign(log_returns[outliers_mask]) * cap_value
+                
+                # Apply the cap
+                winsorized_returns_series[outliers_mask] = signed_cap
+                
+                winsorized_dict[ticker] = winsorized_returns_series
+            else:
+                # No outliers, just use the original series
+                winsorized_dict[ticker] = log_returns
+                
+            valid_tickers_count += 1
+            
+        except Exception as e:
+            logging.error(f"Error winsorizing {ticker}: {e}. Using original returns.")
             winsorized_dict[ticker] = log_returns
             valid_tickers_count += 1
     
-    if valid_tickers_count == 0:
-        logging.warning("No tickers had sufficient data for winsorization. Using original returns for all tickers.")
-        # Fallback: return original returns if no tickers could be winsorized
-        return returns_dict
-    
-    logging.info(f"Winsorization complete. Capped {total_winsorized_points} outlier data points across {valid_tickers_count} tickers.")
+    logging.info(f"Winsorization completed: {valid_tickers_count} tickers processed, {total_winsorized_points} outliers capped")
     return winsorized_dict
 def display_deep_dive_data(ticker_symbol):
     data = fetch_and_organize_deep_dive_data(ticker_symbol)
