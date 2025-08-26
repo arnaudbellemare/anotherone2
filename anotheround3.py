@@ -4020,7 +4020,7 @@ def display_stock_dashboard(ticker_symbol, results_df, returns_dict, etf_histori
                 st.metric("Hurst Exponent", f"{hurst_value:.3f}", delta=hurst_interpretation, delta_color="off")
             else:
                 st.metric("Hurst Exponent", "N/A")
-
+        # This part is correctly indented and assumed to be inside `col1`
         st.subheader("Daily Risk Range (ATR-based)")
         risk_low, risk_high, last_price, pct_change = get_daily_risk_range(daily_history)
         if not pd.isna(risk_low):
@@ -4034,65 +4034,66 @@ def display_stock_dashboard(ticker_symbol, results_df, returns_dict, etf_histori
         display_momentum_bar(ticker_symbol, daily_history)
 
 
-with col2:
-    st.subheader(f"Actionable Peer Analysis (90d)")
+    with col2:
+        st.subheader(f"Actionable Peer Analysis (90d)")
     
-    sort_by = st.radio(
-        "Sort Peers By:",
-        ('Pairs Score (Best Opportunities)', 'Correlation (Truest Peers)'),
-        horizontal=True,
-        label_visibility="collapsed"
-    )
-    
-    if sort_by == 'Pairs Score (Best Opportunities)':
-        correlated_stocks_df = get_correlated_stocks(ticker_symbol, returns_dict, results_df, correlation_threshold=None)
-        final_df = correlated_stocks_df.sort_values('Pairs_Score', ascending=False).head(15)
-    else: # Sort by Correlation
-        correlated_stocks_df = get_correlated_stocks(ticker_symbol, returns_dict, results_df, correlation_threshold=0.6)
-        final_df = correlated_stocks_df.sort_values('Correlation', key=abs, ascending=False).head(15)
-
-    if not final_df.empty:
-        display_cols = [
-            'Correlation', 
-            'Relative_Z_Score', 
-            'PE_Ratio', 
-            'Return_63d',
-            'Pairs_Score'
-        ]
-
-        # --- START OF THE FIX ---
-        # 1. Calculate the maximum score from the dataframe first.
-        max_score = final_df['Pairs_Score'].max()
-
-        # 2. Check if the result is NaN. If it is, use a safe default (e.g., 3.0).
-        #    Otherwise, use the calculated max score (ensuring it's at least 3).
-        if pd.isna(max_score):
-            progress_max_value = 3.0
-        else:
-            progress_max_value = max(max_score, 3.0)
-        # --- END OF THE FIX ---
-
-        st.dataframe(
-            final_df[display_cols],
-            use_container_width=True,
-            column_config={
-                "Correlation": st.column_config.NumberColumn(format="%.2f"),
-                "Relative_Z_Score": st.column_config.NumberColumn("Z-Score", format="%.2f"),
-                "PE_Ratio": st.column_config.NumberColumn("P/E Ratio", format="%.1f"),
-                "Return_63d": st.column_config.NumberColumn("3-Mo Return", format="%.1f%%"),
-                "Pairs_Score": st.column_config.ProgressColumn(
-                    "Pairs Score",
-                    help="Highlights potential pairs trades. = Correlation * |Z-Score Divergence|.",
-                    format="%.2f",
-                    min_value=0,
-                    # 3. Use the safe, pre-calculated variable here. This will never be NaN.
-                    max_value=progress_max_value,
-                ),
-            }
+        sort_by = st.radio(
+            "Sort Peers By:",
+            ('Pairs Score (Best Opportunities)', 'Correlation (Truest Peers)'),
+            horizontal=True,
+            label_visibility="collapsed"
         )
-    else:
-        st.info(f"No significant peers found based on the selected criteria.")
+    
+        if sort_by == 'Pairs Score (Best Opportunities)':
+            correlated_stocks_df = get_correlated_stocks(ticker_symbol, returns_dict, results_df, correlation_threshold=None)
+            final_df = correlated_stocks_df.sort_values('Pairs_Score', ascending=False).head(15)
+        else: # Sort by Correlation
+            correlated_stocks_df = get_correlated_stocks(ticker_symbol, returns_dict, results_df, correlation_threshold=0.6)
+            final_df = correlated_stocks_df.sort_values('Correlation', key=abs, ascending=False).head(15)
 
+        # This `if` checks if we have any data to show
+        if not final_df.empty:
+            # All the following logic now correctly runs ONLY if final_df is NOT empty
+            
+            display_cols = [          # <--- MOVED INSIDE
+                'Correlation', 
+                'Relative_Z_Score', 
+                'PE_Ratio', 
+                'Return_63d',
+                'Pairs_Score'
+            ]
+
+            # Calculate the maximum score safely from the dataframe.
+            max_score = final_df['Pairs_Score'].max() # <--- MOVED INSIDE
+
+            # Check if the result is NaN and provide a safe default.
+            if pd.isna(max_score):                   # <--- MOVED INSIDE
+                progress_max_value = 3.0
+            else:
+                progress_max_value = max(max_score, 3.0)
+
+            # The dataframe display is now safely inside the check.
+            st.dataframe(                            # <--- MOVED INSIDE
+                final_df[display_cols],
+                use_container_width=True,
+                column_config={
+                    "Correlation": st.column_config.NumberColumn(format="%.2f"),
+                    "Relative_Z_Score": st.column_config.NumberColumn("Z-Score", format="%.2f"),
+                    "PE_Ratio": st.column_config.NumberColumn("P/E Ratio", format="%.1f"),
+                    "Return_63d": st.column_config.NumberColumn("3-Mo Return", format="%.1f%%"),
+                    "Pairs_Score": st.column_config.ProgressColumn(
+                        "Pairs Score",
+                        help="Highlights potential pairs trades. = Correlation * |Z-Score Divergence|.",
+                        format="%.2f",
+                        min_value=0,
+                        # Use the safe, pre-calculated variable here.
+                        max_value=progress_max_value,
+                    ),
+                }
+            )
+        # This `else` is now correctly paired with the `if not final_df.empty:`
+        else:
+            st.info(f"No significant peers found based on the selected criteria.")
 # --- NEW FUNCTION: apply_regime_weights(...) ---
 ################################################################################
 # SECTION 2: MAIN APPLICATION LOGIC (CORRECTED)
