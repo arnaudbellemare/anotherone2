@@ -2859,15 +2859,23 @@ def process_single_ticker(ticker_symbol, etf_histories, sector_etf_map):
 @st.cache_data
 def process_tickers(_tickers, _etf_histories, _sector_etf_map):
     results, returns_dict, failed_tickers = [], {}, []
+    
+    # --- CORE FIX: Initialize returns_dict with all tickers ---
+    # This guarantees the dictionary will have all keys, even if values are empty.
+    for ticker in _tickers:
+        returns_dict[ticker] = pd.Series(dtype=float)
+
     with ThreadPoolExecutor(max_workers=10) as executor:
         future_to_ticker = {executor.submit(process_single_ticker, ticker, _etf_histories, _sector_etf_map): ticker for ticker in _tickers}
         for future in tqdm(as_completed(future_to_ticker), total=len(_tickers), desc="Processing All Ticker Metrics"):
             ticker = future_to_ticker[future]
             try:
                 result, returns = future.result()
+                
                 # Check if 'Name' (index 1) is valid to determine if processing was successful
-                if result and pd.notna(result[1]): # Improved check for successful processing
+                if result and pd.notna(result[1]): 
                     results.append(result)
+                    # If returns are valid (not None and not empty), update the dictionary
                     if returns is not None and not returns.empty:
                         returns_dict[ticker] = returns
                 else:
@@ -2877,7 +2885,8 @@ def process_tickers(_tickers, _etf_histories, _sector_etf_map):
                 failed_tickers.append(ticker)
             
     if not results:
-        return pd.DataFrame(columns=columns), failed_tickers, {} # Explicitly returned empty dict for returns_dict
+        # returns_dict will still contain all tickers with empty series, preventing a crash.
+        return pd.DataFrame(columns=columns), failed_tickers, returns_dict 
     
     results_df = pd.DataFrame(results, columns=columns)
     
@@ -2886,14 +2895,15 @@ def process_tickers(_tickers, _etf_histories, _sector_etf_map):
     
     for col in results_df.select_dtypes(include=np.number).columns:
         if results_df[col].isna().all():
-            results_df[col] = 0.0 # Fill entirely NaN columns with 0
+            results_df[col] = 0.0
         else:
             median_val = results_df[col].median()
-            results_df[col] = results_df[col].fillna(median_val) # Direct assignment
+            results_df[col] = results_df[col].fillna(median_val)
 
-        if results_df[col].var() < 1e-8: # Add small noise to constant columns
+        if results_df[col].var() < 1e-8:
             results_df[col] += np.random.normal(0, 0.01, len(results_df))
     
+    # returns_dict will now contain successful returns and empty Series for failures.
     return results_df.infer_objects(copy=False), failed_tickers, returns_dict
 @st.cache_data
 def run_factor_stability_analysis(_results_df, _all_possible_metrics, _reverse_metric_map):
