@@ -2950,57 +2950,6 @@ def calculate_returns_cached(ticker, periods_tuple):
         logging.error(f"Error calculating returns for {ticker} for periods {periods_tuple}: {e}")
         return {f"Return_{p}d": np.nan for p in periods}
 
-
-@st.cache_data
-def process_tickers(_tickers, _etf_histories, _sector_etf_map, _bulk_stock_closes=pd.DataFrame()):
-    results, returns_dict, failed_tickers = [], {}, []
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        # CORRECTED: Use a loop to build the future-to-ticker mapping
-        future_to_ticker = {}
-        for ticker in _tickers:
-            future = executor.submit(
-                process_single_ticker,
-                ticker,
-                _etf_histories,
-                _sector_etf_map,
-                _bulk_stock_closes
-            )
-            future_to_ticker[future] = ticker
-        
-        for future in tqdm(as_completed(future_to_ticker), total=len(_tickers), desc="Processing All Ticker Metrics"):
-            ticker = future_to_ticker[future]
-            try:
-                result, returns = future.result()
-                if result and pd.notna(result[1]):  # Basic success check via Name
-                    results.append(result)
-                    if returns is not None:  # Accept even short/empty series
-                        returns_dict[ticker] = returns
-                else:
-                    failed_tickers.append(ticker)
-            except Exception as e:
-                logging.error(f"Failed to process {ticker} in future: {e}")
-                failed_tickers.append(ticker)
-            
-    if not results:
-        return pd.DataFrame(columns=columns), failed_tickers, {}
-    
-    results_df = pd.DataFrame(results, columns=columns)
-    
-    numeric_cols = [c for c in columns if c not in ['Ticker', 'Name', 'Sector', 'Best_Factor', 'Risk_Flag']]
-    results_df[numeric_cols] = results_df[numeric_cols].apply(pd.to_numeric, errors='coerce')
-    
-    for col in results_df.select_dtypes(include=np.number).columns:
-        if results_df[col].isna().all():
-            results_df[col] = 0.0
-        else:
-            median_val = results_df[col].median()
-            results_df[col] = results_df[col].fillna(median_val)
-
-        if results_df[col].var() < 1e-8:
-            results_df[col] += np.random.normal(0, 0.01, len(results_df))
-    
-    return results_df.infer_objects(copy=False), failed_tickers, returns_dict
-
     
 @st.cache_data
 def run_factor_stability_analysis(_results_df, _all_possible_metrics, _reverse_metric_map):
@@ -3901,6 +3850,300 @@ def calculate_idio_variance_single_stock(returns_dict, benchmark_returns, common
         return np.mean(idio_variances) # Return average IVar_n=1 across the universe
     logging.warning("No valid idiosyncratic variances calculated for any ticker in the universe. Returning NaN.")
     return np.nan
+
+def process_single_ticker(ticker_symbol, etf_histories, sector_etf_map, bulk_stock_closes=pd.DataFrame()):
+    """
+    Fetches and processes a single ticker's data, calculating a comprehensive set of base and institutional factors.
+    Prioritizes bulk_stock_closes for reliable log returns calculation.
+    """
+    try:
+        # 1. FETCH INDIVIDUAL DATA (info, financials, etc.)
+        ticker, history, info, financials, balancesheet, cashflow, quarterly_financials, quarterly_balancesheet, quarterly_cashflow = fetch_ticker_data(ticker_symbol)
+
+        # 2. INITIALIZE
+        data = {col: np.nan for col in columns}
+        data['Ticker'] = ticker_symbol
+        data['Name'] = info.get('longName', 'N/A') if info else f"{ticker_symbol} (Failed)"
+
+        if info:
+            data['Sector'] = info.get('sector', 'Unknown')
+
+        # 3. EXTRACT COMMON DATA POINTS
+        current_price = info.get('currentPrice', info.get('regularMarketPrice')) if info else np.nan
+        shares_outstanding = info.get('sharesOutstanding') if info else np.nan
+        market_cap = info.get('marketCap') if info else np.nan
+        enterprise_value = info.get('enterpriseValue') if info else np.nan
+
+        # Annual Financials
+        revenue_curr = get_value(financials, ['Total Revenue', 'TotalRevenue'])
+        gross_profit_curr = get_value(financials, ['Gross Profit', 'GrossProfit'])
+        net_income_curr = get_value(financials, ['Net Income', 'NetIncome'])
+        operating_income_curr = get_value(financials, ['Operating Income', 'OperatingIncome'])
+        ebit_curr = get_value(financials, ['EBIT', 'Ebit'])
+        interest_expense_curr = get_value(financials, ['Interest Expense', 'InterestExpense'])
+        cogs_curr = get_value(financials, ['Cost Of Revenue', 'CostOfRevenue'])
+
+        # Annual Balance Sheet
+        total_assets_curr = get_value(balancesheet, ['Total Assets', 'TotalAssets'])
+        total_liabilities_curr = get_value(balancesheet, ['Total Liabilities', 'TotalLiab'])
+        total_equity_curr = get_value(balancesheet, ['Total Stockholder Equity', 'TotalStockholderEquity'])
+        current_assets_curr = get_value(balancesheet, ['Total Current Assets', 'CurrentAssets'])
+        current_liabilities_curr = get_value(balancesheet, ['Total Current Liabilities', 'CurrentLiabilities'])
+        inventory_curr = get_value(balancesheet, ['Inventory'])
+        receivables_curr = get_value(balancesheet, ['Net Receivables', 'Accounts Receivable'])
+        payables_curr = get_value(balancesheet, ['Accounts Payable', 'Payables'])
+        long_term_debt_curr = get_value(balancesheet, ['Long Term Debt', 'LongTermDebt'])
+        cash_curr = get_value(balancesheet, ['Cash And Cash Equivalents', 'CashAndCashEquivalents', 'Cash'])
+        retained_earnings_curr = get_value(balancesheet, ['Retained Earnings'])
+        intangibles_curr = (get_value(balancesheet, ['Intangible Assets', 'IntangibleAssets']) or 0) + (get_value(balancesheet, ['Goodwill']) or 0)
+
+        # Annual Cash Flow
+        operating_cash_flow_curr = get_value(cashflow, ['Operating Cash Flow', 'TotalCashFromOperatingActivities'])
+        capex_curr = get_value(cashflow, ['Capital Expenditure', 'CapitalExpenditures'])
+        depreciation_curr = get_value(cashflow, ['Depreciation And Amortization', 'Depreciation'])
+        dividends_paid_curr = get_value(cashflow, ['Dividends Paid', 'DividendsPaid'])
+        buybacks_curr = get_value(cashflow, ['Repurchase Of Capital Stock', 'RepurchaseOfStock'])
+        fcf_curr = (operating_cash_flow_curr or 0) + (capex_curr or 0)
+
+        # 4. CALCULATE ALL FACTORS
+
+        # --- Base Factors ---
+        data.update({
+            'Market_Cap': market_cap,
+            'Dividend_Yield': info.get('dividendYield', 0) * 100 if info else np.nan,
+            'PE_Ratio': info.get('trailingPE') if info else np.nan,
+            'EPS_Diluted': info.get('trailingEps') if info else np.nan,
+            'Insider_Ownership_Ratio': info.get('heldPercentInsiders', 0) * 100 if info else np.nan,
+            'Institutional_Ownership_Ratio': info.get('heldPercentInstitutions', 0) * 100 if info else np.nan,
+            'Audit_Risk': info.get('auditRisk') if info else np.nan,
+            'Board_Risk': info.get('boardRisk') if info else np.nan,
+            'Compensation_Risk': info.get('compensationRisk') if info else np.nan,
+            'Shareholder_Rights_Risk': info.get('shareHolderRightsRisk') if info else np.nan,
+            'Overall_Risk': info.get('overallRisk') if info else np.nan,
+            'Current_Ratio': _safe_division(current_assets_curr, current_liabilities_curr),
+            'Quick_Ratio': _safe_division((current_assets_curr or 0) - (inventory_curr or 0), current_liabilities_curr),
+            'Debt_Ratio': _safe_division(total_liabilities_curr, total_assets_curr),
+            'Liabilities_to_Equity': _safe_division(total_liabilities_curr, total_equity_curr),
+            'Gross_Profit_Margin': _safe_division(gross_profit_curr, revenue_curr) * 100,
+            'Operating_Margin': _safe_division(operating_income_curr, revenue_curr) * 100,
+            'Net_Profit_Margin': _safe_division(net_income_curr, revenue_curr) * 100,
+            'ROA': _safe_division(net_income_curr, total_assets_curr) * 100,
+            'ROE': _safe_division(net_income_curr, total_equity_curr) * 100,
+            'PS_Ratio': _safe_division(market_cap, revenue_curr),
+            'FCF_Yield': _safe_division(fcf_curr, market_cap) * 100,
+            'Sales_Per_Share': _safe_division(revenue_curr, shares_outstanding),
+            'FCF_Per_Share': _safe_division(fcf_curr, shares_outstanding),
+            'Asset_Turnover': _safe_division(revenue_curr, total_assets_curr),
+            'CapEx_to_DepAmor': _safe_division(abs(capex_curr or 0), depreciation_curr),
+            'Dividends_to_FCF': _safe_division(abs(dividends_paid_curr or 0), fcf_curr),
+            'Interest_Coverage': _safe_division(ebit_curr, abs(interest_expense_curr or 0)),
+            'Inventory_Turnover': _safe_division(cogs_curr, inventory_curr),
+            'Share_Buyback_to_FCF': _safe_division(abs(buybacks_curr or 0), fcf_curr),
+            'Dividends_Plus_Buyback_to_FCF': _safe_division(abs(dividends_paid_curr or 0) + abs(buybacks_curr or 0), fcf_curr),
+            'Earnings_Yield': _safe_division(data['EPS_Diluted'], current_price) * 100,
+            'FCF_to_Net_Income': _safe_division(fcf_curr, net_income_curr),
+            'Tangible_Book_Value': (total_assets_curr or 0) - (intangibles_curr or 0) - (total_liabilities_curr or 0),
+            'Return_On_Tangible_Equity': _safe_division(net_income_curr, (total_assets_curr or 0) - (intangibles_curr or 0) - (total_liabilities_curr or 0)) * 100,
+            'Earnings_Growth_Rate_5y': info.get('earningsGrowth', np.nan) * 100 if info else np.nan,
+            'Revenue_Growth_Rate_5y': info.get('revenueGrowth', np.nan) * 100 if info else np.nan,
+            'Dividend_Payout_Ratio': info.get('payoutRatio') if info else np.nan,
+            'Book_to_Market_Ratio': _safe_division(total_equity_curr, market_cap)
+        })
+        data['Earnings_Price_Ratio'] = data['Earnings_Yield'] / 100 if pd.notna(data['Earnings_Yield']) else np.nan
+        data['Piotroski_F-Score'] = calculate_piotroski_f_score(financials, balancesheet, cashflow, total_assets_curr, data['ROA'], net_income_curr)
+        nopat = (operating_income_curr or 0) * 0.75
+        invested_capital = (total_assets_curr or 0) - (current_liabilities_curr or 0)
+        data['ROIC'] = _safe_division(nopat, invested_capital) * 100
+        data['Cash_ROIC'] = _safe_division(fcf_curr, invested_capital) * 100
+
+        # --- Institutional Factors ---
+        data.update({
+            'LogMktCap': np.log(market_cap) if pd.notna(market_cap) and market_cap > 0 else np.nan,
+            'LogAssets': np.log(total_assets_curr) if pd.notna(total_assets_curr) and total_assets_curr > 0 else np.nan,
+            'LogTTMSales': np.log(revenue_curr) if pd.notna(revenue_curr) and revenue_curr > 0 else np.nan,
+            'IndRel_TobinQ': _calculate_tobin_q(market_cap, total_assets_curr, total_liabilities_curr, current_liabilities_curr),
+            'ShareChg': calculate_growth(shares_outstanding, get_value(balancesheet, ['Common Stock Shares Outstanding'], 1)),
+            'SusGrwRate': _calculate_sustainable_growth_rate(data['ROE'], data['Dividend_Payout_Ratio']),
+            'AstGrwth': calculate_growth(total_assets_curr, get_value(balancesheet, ['Total Assets'], 1)),
+            'TotalAccruals': (net_income_curr or 0) - (operating_cash_flow_curr or 0),
+            'FinLev': _safe_division(total_assets_curr, total_equity_curr),
+            'BookLev': data['Liabilities_to_Equity'],
+            'Altman_ZScore': _calculate_altman_z_score(info, financials, balancesheet, current_price) if info else np.nan,
+            'LTDE': _safe_division(long_term_debt_curr, total_equity_curr),
+            'InvTurn': data['Inventory_Turnover'],
+            'InvToAsset': _safe_division(inventory_curr, total_assets_curr),
+            'RONA': _safe_division(net_income_curr, invested_capital) * 100,
+            'GPMargin': data['Gross_Profit_Margin'],
+            'EBITMargin': _safe_division(ebit_curr, revenue_curr) * 100,
+            'CashAst': _safe_division(cash_curr, total_assets_curr),
+            'CashRatio': _safe_division(cash_curr, current_liabilities_curr),
+            'CFAst': _safe_division(operating_cash_flow_curr, total_assets_curr),
+            'CFIC': data['Cash_ROIC'],
+            'CFROIC': data['Cash_ROIC'],
+            'MVEToTL': _safe_division(market_cap, total_liabilities_curr),
+            'SalesToInvCap': _safe_division(revenue_curr, invested_capital),
+            'RecTurn': _safe_division(revenue_curr, receivables_curr),
+            'OCFP': _safe_division(operating_cash_flow_curr, market_cap),
+            'OCFEV': _safe_division(operating_cash_flow_curr, enterprise_value),
+            'OCFRatio': _safe_division(operating_cash_flow_curr, revenue_curr),
+            'SP': _safe_division(revenue_curr, market_cap),
+            'EP': _safe_division(1, data['PE_Ratio']) if pd.notna(data['PE_Ratio']) else np.nan,
+            'AstP': _safe_division(total_assets_curr, market_cap),
+            'OEP': _safe_division(operating_income_curr, market_cap),
+            'CFEV': _safe_division(operating_cash_flow_curr, enterprise_value),
+            'EBITDAEV': _safe_division(info.get('ebitda') if info else np.nan, enterprise_value),
+            'SEV': _safe_division(revenue_curr, enterprise_value),
+            'BP': data['Book_to_Market_Ratio'],
+        })
+
+        # --- Time-Series & Technicals ---
+        returns_perf = calculate_returns_cached(ticker_symbol, tuple([5, 10, 21, 63, 126, 252]))
+        data.update({f"Return_{p}d": returns_perf.get(f"Return_{p}d") for p in [5, 10, 21, 63, 126, 252]})
+
+        log_returns = pd.Series(dtype=float)
+
+        # PRIORITY 1: Use bulk_stock_closes if available
+        if not bulk_stock_closes.empty and ticker_symbol in bulk_stock_closes.columns:
+            close_series = bulk_stock_closes[ticker_symbol].dropna()
+            if len(close_series) > 100 and (close_series > 0).all():
+                log_returns = np.log(close_series / close_series.shift(1)).dropna()
+
+        # FALLBACK: Use individual history
+        if log_returns.empty or len(log_returns) < 100:
+            if not history.empty and 'Close' in history.columns and (history['Close'] > 0).all():
+                close_series = history['Close'].dropna()
+                if len(close_series) > 100:
+                    log_returns = np.log(close_series / close_series.shift(1)).dropna()
+
+        # Metrics that depend on log_returns
+        if not log_returns.empty:
+            data.update({
+                'GARCH_Vol': calculate_garch_volatility(log_returns),
+                'AR_Coeff': calculate_ar_coefficient(log_returns),
+                'Hurst_Exponent': calculate_hurst_lo_modified(log_returns)[0],
+                'AnnVol1M': log_returns.tail(21).std() * np.sqrt(252) if len(log_returns) >= 21 else np.nan,
+                'AnnVol12M': log_returns.tail(252).std() * np.sqrt(252) if len(log_returns) >= 252 else np.nan,
+            })
+
+            # Beta to SPY and rolling correlations (require log_returns)
+            spy_hist = etf_histories.get('SPY')
+            if spy_hist is not None and not spy_hist.empty:
+                spy_returns = np.log(spy_hist['Close'] / spy_hist['Close'].shift(1)).dropna()
+                beta_data = calculate_regime_aware_betas(log_returns, spy_returns)
+                if isinstance(beta_data, dict):
+                    data.update({
+                        'Beta_to_SPY': beta_data.get('conservative_beta'),
+                        'Beta_Down_Market': beta_data.get('down_beta'),
+                        'Beta_Up_Market': beta_data.get('up_beta')
+                    })
+
+            rolling_correlations = {}
+            for etf, etf_history in etf_histories.items():
+                if etf_history is not None and not etf_history.empty:
+                    etf_returns = np.log(etf_history['Close'] / etf_history['Close'].shift(1)).dropna()
+                    common_idx = log_returns.index.intersection(etf_returns.index)
+                    if len(common_idx) > 90:
+                        corr = log_returns.loc[common_idx].corr(etf_returns.loc[common_idx])
+                        if pd.notna(corr):
+                            rolling_correlations[etf] = corr
+
+            if rolling_correlations:
+                best_factor_ticker = max(rolling_correlations, key=lambda k: abs(rolling_correlations.get(k, 0)))
+                data['Best_Factor'] = best_factor_ticker
+                data['Correlation_Score'] = rolling_correlations.get(best_factor_ticker)
+                data['Rolling_Market_Correlation'] = rolling_correlations.get('SPY', np.nan)
+
+        # Price-based technicals (use individual history)
+        if not history.empty:
+            data.update({
+                'Trend': breakout(history['Close']),
+                'Dollar_Volume_90D': (history['Volume'] * history['Close']).rolling(90).mean().iloc[-1] if len(history) >= 90 else np.nan,
+                '14DayRSI': _calculate_rsi(history['Close'], 14),
+                '10DMACD': _calculate_macd(history['Close'], 10, 20, 5)[0],
+                '20DStochastic': _calculate_stochastic_oscillator(history['High'], history['Low'], history['Close'], 20, 3)[0],
+                'Amihud': _calculate_amihud_illiquidity(history['Volume'] * history['Close'], history['Close'].pct_change(), 252),
+                '50To200PrcRatio': _safe_division(history['Close'].rolling(50).mean().iloc[-1], history['Close'].rolling(200).mean().iloc[-1]) if len(history) >= 200 else np.nan,
+                'PrcTo52WH': _safe_division(current_price, history['High'].tail(252).max()) if len(history) >= 252 else np.nan,
+            })
+
+            # Relative Z-Score (uses individual history and best ETF history)
+            if 'Best_Factor' in data and data['Best_Factor'] is not np.nan:
+                best_etf_hist = etf_histories.get(data['Best_Factor'])
+                if best_etf_hist is not None and not best_etf_hist.empty:
+                    common_index = history.index.intersection(best_etf_hist.index)
+                    if len(common_index) > 200:
+                        relative_strength = history['Close'].loc[common_index] / best_etf_hist['Close'].loc[common_index]
+                        if (relative_strength > 0).all() and np.isfinite(relative_strength).all():
+                            data['Relative_Z_Score'] = calculate_volatility_adjusted_z_score(relative_strength.dropna(), ticker=ticker_symbol, sector=data['Sector'])
+
+        # --- Final Derived & Style Factors ---
+        data['Momentum'] = data['Return_252d']
+        data['Growth'] = data.get('Sales_Growth_YOY')
+        data['Q_Score'] = min(_safe_division(data.get('Quick_Ratio', 0), 5.0, 0.0), 1.0)
+        data['Coverage_Score'] = min(_safe_division(data.get('Interest_Coverage', 0), 10.0, 0.0), 1.0)
+        data['Value_Factor'] = min(_safe_division(1, ((data.get('PE_Ratio', 0) + data.get('PS_Ratio', 0)) / 2.0), 0.0), 1.0)
+        profit_metrics = [m for m in [data.get('ROE'), data.get('ROIC'), data.get('Net_Profit_Margin')] if pd.notna(m)]
+        data['Profitability_Factor'] = min(_safe_division(np.mean(profit_metrics), 100.0, 0.0), 1.0) if profit_metrics else 0.0
+        data['Carry'] = (data.get('Earnings_Yield', 0) + data.get('FCF_Yield', 0)) / 2.0
+
+        # 6. RETURN RESULTS
+        result_list = [data.get(col) for col in columns]
+        return result_list, log_returns
+
+    except Exception as e:
+        logging.error(f"Critical error processing {ticker_symbol}: {e}", exc_info=True)
+        failed_data = {col: np.nan for col in columns}
+        failed_data['Ticker'] = ticker_symbol
+        failed_data['Name'] = f"{ticker_symbol} (Error)"
+        return [failed_data.get(col) for col in columns], pd.Series(dtype=float)
+@st.cache_data
+def process_tickers(_tickers, _etf_histories, _sector_etf_map, _bulk_stock_closes=pd.DataFrame()):
+    results, returns_dict, failed_tickers = [], {}, []
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_ticker = {}
+        for ticker in _tickers:
+            future = executor.submit(
+                process_single_ticker,
+                ticker,
+                _etf_histories,
+                _sector_etf_map,
+                _bulk_stock_closes
+            )
+            future_to_ticker[future] = ticker
+        
+        for future in tqdm(as_completed(future_to_ticker), total=len(_tickers), desc="Processing All Ticker Metrics"):
+            ticker = future_to_ticker[future]
+            try:
+                result, returns = future.result()
+                if result and pd.notna(result[1]):  # Success check
+                    results.append(result)
+                    if returns is not None:
+                        returns_dict[ticker] = returns
+                else:
+                    failed_tickers.append(ticker)
+            except Exception as e:
+                logging.error(f"Failed to process {ticker}: {e}")
+                failed_tickers.append(ticker)
+    
+    if not results:
+        return pd.DataFrame(columns=columns), failed_tickers, {}
+    
+    results_df = pd.DataFrame(results, columns=columns)
+    
+    numeric_cols = [c for c in columns if c not in ['Ticker', 'Name', 'Sector', 'Best_Factor', 'Risk_Flag']]
+    results_df[numeric_cols] = results_df[numeric_cols].apply(pd.to_numeric, errors='coerce')
+    
+    for col in results_df.select_dtypes(include=np.number).columns:
+        if results_df[col].isna().all():
+            results_df[col] = 0.0
+        else:
+            median_val = results_df[col].median()
+            results_df[col] = results_df[col].fillna(median_val)
+
+        if results_df[col].var() < 1e-8:
+            results_df[col] += np.random.normal(0, 0.01, len(results_df))
+    
+    return results_df.infer_objects(copy=False), failed_tickers, returns_dict
 # --- NEW FUNCTION: calculate_terminal_wealth_metrics(...) ---
 def calculate_terminal_wealth_metrics(
     portfolio_sharpe, benchmark_sharpe,
