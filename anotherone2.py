@@ -2955,10 +2955,18 @@ def calculate_returns_cached(ticker, periods_tuple):
 def process_tickers(_tickers, _etf_histories, _sector_etf_map, _bulk_stock_closes=pd.DataFrame()):
     results, returns_dict, failed_tickers = [], {}, []
     with ThreadPoolExecutor(max_workers=10) as executor:
-        future_to_ticker = {
-            executor.submit(process_single_ticker, ticker, _etf_histories, _sector_etf_map, _bulk_stock_closes): ticker 
-            for ticker in _tickers
-        }
+        # CORRECTED: Use a loop to build the future-to-ticker mapping
+        future_to_ticker = {}
+        for ticker in _tickers:
+            future = executor.submit(
+                process_single_ticker,
+                ticker,
+                _etf_histories,
+                _sector_etf_map,
+                _bulk_stock_closes
+            )
+            future_to_ticker[future] = ticker
+        
         for future in tqdm(as_completed(future_to_ticker), total=len(_tickers), desc="Processing All Ticker Metrics"):
             ticker = future_to_ticker[future]
             try:
@@ -2992,48 +3000,7 @@ def process_tickers(_tickers, _etf_histories, _sector_etf_map, _bulk_stock_close
             results_df[col] += np.random.normal(0, 0.01, len(results_df))
     
     return results_df.infer_objects(copy=False), failed_tickers, returns_dict
-    
-@st.cache_data
-def process_tickers(_tickers, _etf_histories, _sector_etf_map, _bulk_stock_closes=pd.DataFrame()):
-    results, returns_dict, failed_tickers = [], {}, []
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        future_to_ticker = {
-            executor.submit(process_single_ticker, ticker, _etf_histories, _sector_etf_map, _bulk_stock_closes): ticker 
-            for ticker in _tickers
-        }
-        for future in tqdm(as_completed(future_to_ticker), total=len(_tickers), desc="Processing All Ticker Metrics"):
-            ticker = future_to_ticker[future]
-            try:
-                result, returns = future.result()
-                if result and pd.notna(result[1]):  # Basic success check via Name
-                    results.append(result)
-                    if returns is not None:  # Accept even short/empty series
-                        returns_dict[ticker] = returns
-                else:
-                    failed_tickers.append(ticker)
-            except Exception as e:
-                logging.error(f"Failed to process {ticker} in future: {e}")
-                failed_tickers.append(ticker)
-            
-    if not results:
-        return pd.DataFrame(columns=columns), failed_tickers, {}
-    
-    results_df = pd.DataFrame(results, columns=columns)
-    
-    numeric_cols = [c for c in columns if c not in ['Ticker', 'Name', 'Sector', 'Best_Factor', 'Risk_Flag']]
-    results_df[numeric_cols] = results_df[numeric_cols].apply(pd.to_numeric, errors='coerce')
-    
-    for col in results_df.select_dtypes(include=np.number).columns:
-        if results_df[col].isna().all():
-            results_df[col] = 0.0
-        else:
-            median_val = results_df[col].median()
-            results_df[col] = results_df[col].fillna(median_val)
 
-        if results_df[col].var() < 1e-8:
-            results_df[col] += np.random.normal(0, 0.01, len(results_df))
-    
-    return results_df.infer_objects(copy=False), failed_tickers, returns_dict
     
 @st.cache_data
 def run_factor_stability_analysis(_results_df, _all_possible_metrics, _reverse_metric_map):
