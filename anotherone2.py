@@ -422,70 +422,62 @@ def filter_tickers_by_history(_tickers, min_years=5):
     my_bar.empty()
     return sorted(valid_tickers)
 
-# --- THE FOLLOWING INEFFICIENT FUNCTIONS HAVE BEEN REMOVED ---
-# def _check_single_ticker_history(ticker, min_years):
-#     ...
-#
-# @st.cache_data
-# def filter_tickers_by_history(_tickers, min_years=5):
-#    (The multi-threaded version that makes individual API calls)
-#     ...
-# -----------------------------------------------------------
-def _check_single_ticker_history(ticker, min_years):
-    """
-    Worker function for the thread pool. Fetches history for a single ticker
-    and checks if it meets the minimum year requirement.
-    Returns the ticker if valid, otherwise None.
-    """
-    try:
-        # We only need the start and end date, so a short period fetch is fine if we can get the 'firstTradeDate'
-        # However, fetching 'max' is the most reliable way to get the true start date.
-        stock = yf.Ticker(ticker)
-        hist = stock.history(period="max", auto_adjust=True, progress=False)
-        if not hist.empty:
-            # Calculate the duration in years
-            duration_days = (hist.index[-1] - hist.index[0]).days
-            if (duration_days / 365.25) >= min_years:
-                return ticker
-    except Exception as e:
-        # Silently fail for individual tickers to not stop the whole process
-        # logging.warning(f"Could not check history for {ticker}: {e}")
-        pass
-    return None
-
 @st.cache_data
 def filter_tickers_by_history(_tickers, min_years=5):
     """
     Filters a list of tickers to include only those with a minimum number of years of historical data.
-    Uses multi-threading for speed and displays a progress bar in Streamlit.
-    
-    Args:
-        _tickers (list): The initial list of ticker symbols.
-        min_years (int): The minimum number of years of data required.
-
-    Returns:
-        list: A new, filtered list of ticker symbols.
+    This version downloads the full required period for all tickers at once and counts the data points,
+    which is the most robust method.
     """
+    if not _tickers:
+        return []
+
     st.write(f"Pre-filtering {len(_tickers)} tickers for at least {min_years} years of history...")
-    valid_tickers = []
     
-    progress_text = "Filtering tickers by history length. Please wait."
+    # 1. Determine the start date for the full data download.
+    start_date = (datetime.now() - pd.DateOffset(years=min_years)).strftime('%Y-%m-%d')
+    
+    # 2. Perform ONE single, efficient bulk download for the entire required period.
+    progress_text = f"Downloading {min_years}-year history for {len(_tickers)} tickers to verify data. Please wait."
     my_bar = st.progress(0, text=progress_text)
     
-    with ThreadPoolExecutor(max_workers=20) as executor:
-        future_to_ticker = {executor.submit(_check_single_ticker_history, ticker, min_years): ticker for ticker in _tickers}
+    try:
+        # We only need the 'Close' prices for our check.
+        close_prices = yf.download(
+            _tickers, 
+            start=start_date, 
+            progress=False,
+            threads=True
+        )['Close']
         
-        total_futures = len(future_to_ticker)
-        for i, future in enumerate(as_completed(future_to_ticker)):
-            result = future.result()
-            if result:
-                valid_tickers.append(result)
-            
-            # Update progress bar
-            my_bar.progress((i + 1) / total_futures, text=progress_text)
+        my_bar.progress(100, text="Data downloaded. Filtering...")
 
-    my_bar.empty() # Clear the progress bar after completion
-    return sorted(valid_tickers) # Return a sorted list for consistency
+        if close_prices.empty:
+            st.warning("Historical data download returned an empty frame. Falling back to all tickers.")
+            my_bar.empty()
+            return _tickers  # Fallback: use all tickers if download completely fails
+
+    except Exception as e:
+        st.warning(f"Bulk download failed ({e}). Falling back to all tickers.")
+        my_bar.empty()
+        return _tickers  # Fallback on any error
+
+    # 3. Process the downloaded data
+    valid_tickers = []
+    required_data_points = int(min_years * 252 * 0.90)  # 90% tolerance for holidays/gaps
+
+    if isinstance(close_prices, pd.Series):
+        # Single ticker case
+        if close_prices.count() >= required_data_points:
+            valid_tickers.append(close_prices.name)
+    else:
+        for ticker in _tickers:
+            if ticker in close_prices.columns:
+                if close_prices[ticker].count() >= required_data_points:
+                    valid_tickers.append(ticker)
+    
+    my_bar.empty()
+    return sorted(valid_tickers)
 # --- Helper Functions ---
 def calculate_growth(current, previous):
     if pd.isna(current) or pd.isna(previous) or previous == 0: return np.nan
