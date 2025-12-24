@@ -1229,7 +1229,7 @@ def get_benchmark_metrics(benchmark_ticker="SPY", period="3y"):
     except Exception as e:
         logging.error(f"Could not get benchmark metrics for {benchmark_ticker}: {e}")
         return {'Volatility': np.nan, 'Sharpe Ratio': np.nan}       
-def winsorize_returns(returns_dict, lookback_T=126, d_max=6.0):
+def winsorize_returns(returns_dict, lookback_T=63, d_max=6.0):
     """
     Winsorizes returns based on the robust z-score method described in
     "The Elements of Quantitative Investing".
