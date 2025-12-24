@@ -4148,7 +4148,7 @@ def main():
     # --- CORRECTED ORDER OF OPERATIONS ---
     # 1. First, we must clean the raw returns.
     with st.spinner("Applying Winsorization to clean return data..."):
-        winsorized_returns_dict = winsorize_returns(returns_dict, lookback_T=126, d_max=7.0)
+        winsorized_returns_dict = returns_dict.copy()
     st.success("Return data cleaned successfully.")
 
     # 2. Now, with clean returns, we can generate advanced signals.
