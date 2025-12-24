@@ -4242,7 +4242,21 @@ def main():
 
     top_15_df = results_df.sort_values('Score', ascending=False).head(15).copy()
     top_15_tickers = top_15_df['Ticker'].tolist()
+    st.write("Debug — len(top_15_tickers) =", len(top_15_tickers))
+    if top_15_tickers:
+        st.write("Top 15 tickers:", top_15_tickers[:10], "...")
 
+    st.write("Debug — len(winsorized_returns_dict) =", len(winsorized_returns_dict))
+    st.write("Debug — tickers with data after winsorization:",
+             [t for t, s in winsorized_returns_dict.items() if len(s) > 30])
+
+# Right after creating portfolio_returns_df
+    st.write("Debug — portfolio_returns_df shape after reindex:", portfolio_returns_df.shape)
+    st.write("Debug — number of non-NaN rows per column:\n", portfolio_returns_df.notna().sum())
+
+    if portfolio_returns_df.empty:
+        st.error("portfolio_returns_df is completely empty after reindex + dropna(how='all').")
+        st.stop()
     # --- Portfolio Overview & Hedging ---
     st.header("📈 Portfolio Overview & Hedging")
     if not top_15_tickers:
