@@ -19,13 +19,11 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from sklearn.linear_model import LinearRegression, Ridge
 from tenacity import retry, stop_after_attempt, wait_exponential, wait_fixed, retry_if_exception_type
 import random
-from pandas_datareader import data as pdr
 import plotly.graph_objects as go
 from statsmodels.tsa.api import Holt
 from sklearn.preprocessing import RobustScaler
 import statsmodels.tsa.stattools as smt
 import plotly.express as px
-import pandas_datareader.data as web
 from hmmlearn.hmm import GaussianHMM
 import statsmodels.tsa.api as sm
 # Add these to your main script's import section
@@ -842,34 +840,74 @@ def calculate_robust_hedge_weights(
         return pd.Series(0.0, index=X.columns)
 
 
+def fetch_fred_series(series_id, start_date, end_date):
+    url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
+    df = pd.read_csv(url)
+    df.columns = ["Date", series_id]
+    df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+    df[series_id] = pd.to_numeric(df[series_id], errors="coerce")
+    df = df.dropna(subset=["Date"]).set_index("Date")
+    return df.loc[start_date:end_date]
+
 @st.cache_data
 def fetch_macro_data(start_date="2018-01-01"):
-    """
-    Fetches key macroeconomic time-series data from the FRED database.
-    This version uses a default start date and calculates the end date automatically.
-    """
     try:
-        # Calculate end_date inside the function
         end_date = datetime.now()
-        
-        # Fetch 10-Year Treasury Yield (Interest Rates)
-        ten_year_yield = pdr.DataReader('DGS10', 'fred', start_date, end_date) # Explicitly used pdr.DataReader
-        # Fetch St. Louis Fed Financial Stress Index (centered at 0)
-        stress_index = pdr.DataReader('STLFSI3', 'fred', start_date, end_date) # Explicitly used pdr.DataReader
-        
+        ten_year_yield = fetch_fred_series("DGS10", start_date, end_date)
+        stress_index = fetch_fred_series("STLFSI3", start_date, end_date)
+
         macro_df = pd.concat([ten_year_yield, stress_index], axis=1)
-        macro_df.columns = ['Interest_Rate', 'Stress_Index']
-        
-        # Forward-fill to handle non-trading days, then back-fill any initial NaNs
+        macro_df.columns = ["Interest_Rate", "Stress_Index"]
         macro_df = macro_df.ffill().bfill()
-        
+
         logging.info("Successfully fetched macroeconomic data.")
         return macro_df
     except Exception as e:
         logging.error(f"Failed to fetch macro data: {e}")
-        # Return a dummy dataframe on failure to prevent crashes
         date_range = pd.date_range(start=start_date, end=datetime.now())
-        return pd.DataFrame(0, index=date_range, columns=['Interest_Rate', 'Stress_Index'])
+        return pd.DataFrame(0, index=date_range, columns=["Interest_Rate", "Stress_Index"])
+
+@st.cache_data
+def fetch_turbulence_data():
+    end_date = datetime.now()
+    start_date = "1990-01-01"
+    empty_df = pd.DataFrame()
+
+    try:
+        econ_growth_raw = fetch_fred_series("GNPC96", "1947-01-01", end_date)
+        inflation_raw = fetch_fred_series("CPIAUCSL", "1947-01-01", end_date)
+
+        econ_growth = econ_growth_raw.pct_change() * 100
+        econ_growth.columns = ["Economic Growth"]
+
+        inflation = inflation_raw.pct_change() * 100
+        inflation.columns = ["Inflation"]
+    except Exception as e:
+        logging.error(f"Failed to fetch FRED data: {e}")
+        return empty_df, empty_df, empty_df, empty_df
+
+    sector_tickers = list(sector_etf_map.values())
+    raw_sector_data = yf.download(sector_tickers, start=start_date, end=end_date, progress=False)
+    if raw_sector_data.empty or "Adj Close" not in raw_sector_data.columns:
+        logging.error("yfinance download for sector tickers failed or returned invalid data.")
+        st.error("Failed to download sector ETF data. Turbulence analysis will be skipped.")
+        return empty_df, empty_df, empty_df, empty_df
+    sector_prices = raw_sector_data["Adj Close"].dropna()
+
+    currency_tickers = ["EURUSD=X", "JPY=X", "GBPUSD=X", "CHF=X", "CAD=X", "AUDUSD=X", "NZDUSD=X", "SEK=X", "NOK=X"]
+    raw_currency_data = yf.download(currency_tickers, start=start_date, end=end_date, progress=False)
+    if raw_currency_data.empty or "Adj Close" not in raw_currency_data.columns:
+        logging.error("yfinance download for currency tickers failed or returned invalid data.")
+        st.error("Failed to download currency data. Turbulence analysis will be skipped.")
+        return empty_df, empty_df, empty_df, empty_df
+    currency_prices = raw_currency_data["Adj Close"].dropna()
+
+    return (
+        econ_growth.reset_index(),
+        inflation.reset_index(),
+        sector_prices.reset_index(),
+        currency_prices.reset_index(),
+    )
 
 def _run_analysis_on_subset(_data_subset, _all_possible_metrics, _reverse_metric_map):
     """
